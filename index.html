@@ -13,7 +13,7 @@
     background: url(back.jpg);
     padding: .45em;
     min-width: 12em;
-    margin: 50px;
+    margin: 25px 50px;
     position: relative;
     box-shadow: 4px 4px 4px rgba(0,0,0,.9);
   }
@@ -83,10 +83,17 @@
   {
     position: absolute;
     display: block;
-    content: "。";
     font-size: .6em;
     left: 0;
     top: -.6em;
+  }
+  span.stop:after
+  {
+    content: "。";
+  }
+  span.comma:after
+  {
+    content: "，";
   }
   p
   {
@@ -122,18 +129,20 @@
 <body>
 <audio class="typist" src="typist.mp3" loop="loop" preload="preload"></audio>
 <audio class="write" src="write.mp3" loop="loop" preload="preload"></audio>
+
+<p>
+  <button class="start">开始</button>
+  <button class="underline">标线</button>
+  <button class="copy">复制</button>
+  <button class="small">A-</button>
+  <button class="big">A+</button>
+</p>
+
 <div class="quote">
   <div class="dest"></div>
   <div class="source">佛语典故</div>
 </div>
-<p>
-  <button class="copy">复制</button>
-  <button class="start">开始</button>
-  <button class="underline">标线</button>
-  <button class="small">A-</button>
-  <button class="big">A+</button>
-</p>
-<textarea class="src">维摩诘经•问疾品::文殊师利言。如是居士。|若来已|更不来。若去已更不去。所|以者|何。来者无所从来。去者无所至。所可见者更不可见。</textarea>
+<textarea class="src">•::</textarea>
  
 <script>
   var dest = $('.dest'), src = $('.src'),
@@ -208,12 +217,13 @@
     $('.source').text(source).removeClass('show');
     $.each(data.pop().replace(/\|/g, ''), function(idx, val){
       if(val == '。')
-        $('<span></span>').appendTo('.dest');
+        $('<span class="stop"></span>').appendTo('.dest');
+      else if(val == '，')
+        $('<span class="comma"></span>').appendTo('.dest');
       else
         $('<b>'+val+'</b>').appendTo('.dest');
       all.push(idx);
     });
-
   });
 
   $('button.big').click(function(){
@@ -234,6 +244,7 @@
       $('div.quote').addClass('safari');
     else if($.browser.chrome)
       $('div.quote').addClass('chrome');
+    $('button.copy').click();
   });
 </script>
 </body>
