@@ -59,7 +59,7 @@ div.source:after
   display: block;
   width: .1em;
   top: -1px;
-  left: .15em;
+  left: -.15em;
   bottom: -1px;
   background-color: red;
   box-shadow: 1px 1px 1px rgba(0,0,0,.8);
