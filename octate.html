@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="octate.css">
 </head>
 <body>
-<p class="date"></p>
+<p><span class="date"></span> | <span class="hide">显示/隐藏变卦</span></p>
 
 <table class="hexagram">
   <tr>
@@ -163,6 +163,13 @@ $('.gram').click(function(){
   let cat = $(this).hasClass('main') ? 'main' : 'sub';
   find_names(cat, clazz, this);
   find_names(cat == 'main' ? 'sub' : 'main', clazz, this);
+});
+
+$('.hide').click(function(){
+  $('.sep.other').toggle();
+  $('.bible.sub').toggle();
+  $('td.sub').toggle();
+  $('.change').toggle();
 });
 
 find_names('main', 'up');
