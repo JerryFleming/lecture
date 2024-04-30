@@ -1,25 +1,71 @@
+.sep {
+  border-top: 1px dotted black;
+  position: relative;
+}
+.sep:before {
+  position: absolute;
+  background-color: #e1f5fe;
+  left: 30%;
+  top: -12px;
+  padding: 2px 5px;;
+}
+.sep.self:before {
+  content: "本卦";
+}
+.sep.other:before {
+  content: "变卦";
+}
+.nobreak {
+  width: 2em;
+}
 .hexagram {
   border-spacing: 5px;
   border-collapse: separate;
+  font-size: 16px;
 }
 .change {
-  padding-right: 20px;
+  text-align: center;
 }
 .names {
   text-align: center;
+  position: relative;
 }
 .prefix {
   position: relative;
   width: 2em;
   display: inline-block;
 }
+.wuxing {
+  position: absolute;
+  font-size: smaller;
+  margin-left: 5px;
+  border: 1px dotted black;
+  border-radius: 10px;
+  top: 5px;
+  width: 19px;
+}
+.mark {
+  width: 22px;
+  margin-left: 15px;
+  margin-right: 20px;
+  text-align: center;
+  display: inline-block;
+}
+.mark.on {
+  border: 1px dotted black;
+}
 .name {
   font-weight: bold;
   font-size: 30px;
 }
 .gram {
-  width: 120px;
+  width: 140px;
   height: 20px;
+  text-align: center;
+}
+.gram span:nth-child(2) {
+  display: inline-block;
+  width: 40px;
 }
 .gram.up {
   background-color: red;
@@ -27,17 +73,20 @@
 .gram.down {
   background-color: black;
   position: relative;
+  color: white;
 }
 .gram.down:before {
   position: absolute;
   content: "";
-  width: 20px;
-  left: 50px;
+  width: 24px;
+  left: 60px;
   top: 0;
   bottom: 0;
   background-color: white;
 }
 .bible td {
+  font-size: smaller;
+  vertical-align: top;
 }
 .grid tr:first-child {
   background-color: #e1f5fe !important;
@@ -71,6 +120,6 @@
 .tuan:before {
   content: "彖辞";
 }
-.xiang:before {
+.xiang:before:not(.row) {
   content: "象辞";
 }
