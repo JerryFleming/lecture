@@ -5,18 +5,15 @@ div.wrap
 div.quote
 {
   writing-mode: vertical-rl;
-  height: 15em;
   font-size: 24px;
   font-family: 'Helvetica Neue', Tahoma, 'PingFang SC', 'Microsoft Yahei', sans-serif;
-  text-shadow: 1px 1px 1px rgba(0,0,0,.7);
+  text-shadow: 1px 1px 1px rgba(0,0,0,.5);
+  box-shadow: 3px 3px 3px rgba(0,0,0,.9);
   background-image: url(back.jpg);
   width: 350px;
   max-width: 350px;
   position: relative;
-  box-shadow: 3px 3px 3px rgba(0,0,0,.9);
-}
-div.quote
-{
+
   border-width: 10px;
   border-image: url(bg.jpg) 60 stretch;
   border-image-width: 10px;
@@ -30,6 +27,7 @@ div.quote.chrome
 div.dest
 {
   margin-left: 40px;
+  letter-spacing: .2em;
 }
 div.source
 {
@@ -39,6 +37,7 @@ div.source
   bottom: 20px;
   text-align: right;
   visibility: hidden;
+  letter-spacing: .15em;
 }
 div.source:before
 {
@@ -58,9 +57,9 @@ div.source:after
   content: "";
   display: block;
   width: 2px;
-  top: -1px;
+  top: 0;
   left: 0;
-  bottom: -1px;
+  bottom: 0;
   background-color: red;
   box-shadow: 1px 1px 1px rgba(0,0,0,.7);
 }
@@ -69,9 +68,7 @@ b
   font-weight: normal; 
   display: inline-block;
   visibility: hidden;
-  margin-left: 4px;
-  margin-top: 1px;
-  margin-bottom: 1px;
+  margin-left: 6px;
 }
 span
 {

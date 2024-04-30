@@ -69,6 +69,8 @@ $('button.copy').click(function(){
   else source = '佛语典故';
   $('.source').text(source).removeClass('show');
   $.each(data.pop().replace(/\|/g, ''), function(idx, val){
+    if(idx && idx%20==0)
+      $('<br/>').appendTo('.dest');
     if(val == '。')
       $('<span class="stop"></span>').appendTo('.dest');
     else if(val == '，')
@@ -92,9 +94,6 @@ $('button.small').click(function(){
   $('div.source').css('font-size', small + 'px')
 });
 $('button.save').click(function(){
-  html2canvas($('.wrap')[0]).then(function(canvas) {
-    document.body.appendChild(canvas);
-  });
 });
 
 $(document).ready(function(){
