@@ -1,14 +1,136 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>纳甲卦</title>
+<script src="jquery.min.js"></script>
 <script src="calendar.js"></script>
+<script src="unicode.js"></script>
+<script src="bible.js"></script>
+<link rel="stylesheet" href="octate.css">
 </head>
 <body>
-<script>
-var lunar = calendar.solar2lunar();
-document.write('<strong>调用代码示例Demo</strong><br />阳历：'+lunar.cYear + '年' +lunar.cMonth +  '月' + lunar.cDay +'日（'+lunar.astro+'）<br />农历：'+lunar.lYear + '年' +lunar.IMonthCn+lunar.IDayCn+'，'+lunar.gzYear+'年'+lunar.gzMonth+'月'+lunar.gzDay+'日');
+<p class="date"></p>
 
+<table>
+  <tr>
+    <td class="names main"><span class="prefix"></span><span class="name">乾</span></td>
+    <td class="change">之</td>
+    <td class="names sub"><span class="prefix"></span><span class="name">乾</span></td>
+  </tr>
+  <tr>
+    <td>
+      <table class="hexagram main">
+        <tr><td class="mark"></td><td class="num"></td><td class="gram up"></td></tr>
+        <tr><td class="mark"></td><td class="num"></td><td class="gram up"></td></tr>
+        <tr><td class="mark"></td><td class="num"></td><td class="gram up"></td></tr>
+        <tr><td class="mark"></td><td class="num"></td><td class="gram up"></td></tr>
+        <tr><td class="mark"></td><td class="num"></td><td class="gram up"></td></tr>
+        <tr><td class="mark"></td><td class="num"></td><td class="gram up"></td></tr>
+      </table>
+    </td>
+    <td></td>
+    <td>
+      <table class="hexagram sub">
+        <tr><td class="gram up"></td></tr>
+        <tr><td class="gram up"></td></tr>
+        <tr><td class="gram up"></td></tr>
+        <tr><td class="gram up"></td></tr>
+        <tr><td class="gram up"></td></tr>
+        <tr><td class="gram up"></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table class="bible main">
+  <tr><td class="prepend diagram"></td></tr>
+  <tr><td class="prepend title"></td></tr>
+  <tr><td class="prepend tuan"></td></tr>
+  <tr><td class="prepend xiang"></td></tr>
+  <tr>
+    <td>
+      <table class="grid">
+        <tr><th>爻位</th><th>爻辞</th><th>象辞</th></tr>
+        <tr><td class="row5 num"></td><td class="row5 title"></td><td class="row5 xiang"></td></tr>
+        <tr><td class="row4 num"></td><td class="row4 title"></td><td class="row4 xiang"></td></tr>
+        <tr><td class="row3 num"></td><td class="row3 title"></td><td class="row3 xiang"></td></tr>
+        <tr><td class="row2 num"></td><td class="row2 title"></td><td class="row2 xiang"></td></tr>
+        <tr><td class="row1 num"></td><td class="row1 title"></td><td class="row1 xiang"></td></tr>
+        <tr><td class="row0 num"></td><td class="row0 title"></td><td class="row0 xiang"></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table class="bible sub">
+  <tr><td class="prepend diagram"></td></tr>
+  <tr><td class="prepend title"></td></tr>
+  <tr><td class="prepend tuan"></td></tr>
+  <tr><td class="prepend xiang"></td></tr>
+  <tr>
+    <td>
+      <table class="grid">
+        <tr><th>爻位</th><th>爻辞</th><th>象辞</th></tr>
+        <tr><td class="row5 num"></td><td class="row5 title"></td><td class="row5 xiang"></td></tr>
+        <tr><td class="row4 num"></td><td class="row4 title"></td><td class="row4 xiang"></td></tr>
+        <tr><td class="row3 num"></td><td class="row3 title"></td><td class="row3 xiang"></td></tr>
+        <tr><td class="row2 num"></td><td class="row2 title"></td><td class="row2 xiang"></td></tr>
+        <tr><td class="row1 num"></td><td class="row1 title"></td><td class="row1 xiang"></td></tr>
+        <tr><td class="row0 num"></td><td class="row0 title"></td><td class="row0 xiang"></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<script>
+function find_content(cat, idx) {
+  $(`.bible.${cat} td`).each(function(){
+    if(!$(this).hasClass('prepend')) return;
+    $(this).text(BIBLE[idx][this.className.replace('prepend ', '')]);
+  });
+  $.each(BIBLE[idx].table, function(idx, ele){
+    $(`.bible.${cat} .row${idx}.num`).text(ele[0]);
+    $(`.bible.${cat} .row${idx}.title`).text(ele[1]);
+    $(`.bible.${cat} .row${idx}.xiang`).text(ele[2]);
+  });
+}
+
+function find_names(cat, clazz, current) {
+  let table = $('table.hexagram.' + cat);
+  let sum = 0; 
+  let names = $('.names.' + cat);
+  table.find('td.gram').each(function(idx, ele){
+    var bit = $(ele).hasClass('up') ? 0 : 1;
+    var weight = 6 - (idx % 6) - 1;
+    sum += 2**weight * bit;
+    if(ele == current && cat == 'main')
+      $('table.hexagram.sub').find('.gram').eq(idx)
+        .removeClass('up').removeClass('down').addClass(clazz);
+  });
+  names.find('.name').text(ORDER[sum]);
+  let down = sum % 8, up = Math.floor(sum / 8);
+  if(up == down) names.find('.prefix').text('');
+  else names.find('.prefix').text(`${NAME[up]}${NAME[down]}`);
+
+  find_content(cat, sum);
+}
+var lunar = calendar.solar2lunar();
+$('.date').text(`${lunar.lYear}年${lunar.IMonthCn+lunar.IDayCn}，${lunar.gzYear}年${lunar.gzMonth}月${lunar.gzDay}日`);
+
+$('.gram').click(function(){
+  let clazz = 'up';
+  if($(this).hasClass('up')) clazz = 'down';
+  $(this).removeClass('up').removeClass('down').addClass(clazz);
+  let table = $(this).parents('table.hexagram');
+  let cat = table.hasClass('main') ? 'main' : 'sub';
+  find_names(cat, clazz, this);
+  find_names(cat == 'main' ? 'sub' : 'main', clazz, this);
+});
+
+find_names('main', 'up');
+find_names('sub', 'up');
 </script>
+
 </body>
 </html>

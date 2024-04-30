@@ -1,0 +1,76 @@
+.hexagram {
+  border-spacing: 5px;
+  border-collapse: separate;
+}
+.change {
+  padding-right: 20px;
+}
+.names {
+  text-align: center;
+}
+.prefix {
+  position: relative;
+  width: 2em;
+  display: inline-block;
+}
+.name {
+  font-weight: bold;
+  font-size: 30px;
+}
+.gram {
+  width: 120px;
+  height: 20px;
+}
+.gram.up {
+  background-color: red;
+}
+.gram.down {
+  background-color: black;
+  position: relative;
+}
+.gram.down:before {
+  position: absolute;
+  content: "";
+  width: 20px;
+  left: 50px;
+  top: 0;
+  bottom: 0;
+  background-color: white;
+}
+.bible td {
+}
+.grid tr:first-child {
+  background-color: #e1f5fe !important;
+}
+.grid tr:nth-child(odd) {
+  background-color: #eee;
+}
+.grid th, .grid td {
+  text-align: left;
+  border: 1px solid black;
+}
+.grid {
+  border-spacing: 1px;
+  border-collapse: collapse;
+}
+.prepend {
+  position: relative;
+}
+.prepend:before {
+  font-weight: bold;
+  display: inline-block;
+  margin-right: 5px;
+  background-color: #accff2;
+}
+.diagram:before {
+  content: "卦象";
+}
+.title:before {
+  content: "卦辞";
+}
+.tuan:before {
+  content: "彖辞";
+}
+.xiang:before {
+  content: "象辞";
+}
