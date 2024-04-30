@@ -1,3 +1,4 @@
+const ROWS = 15;
 var dest = $('.dest'), src = $('.src'),
   curr = 0, cnt = 0, timeout = 200, intval,
   all = [], range = [];
@@ -69,7 +70,7 @@ $('button.copy').click(function(){
   else source = '佛语典故';
   $('.source').text(source).removeClass('show');
   $.each(data.pop().replace(/\|/g, ''), function(idx, val){
-    if(idx && idx%20==0)
+    if(idx && idx%ROWS==0)
       $('<br/>').appendTo('.dest');
     if(val == '。')
       $('<span class="stop"></span>').appendTo('.dest');
