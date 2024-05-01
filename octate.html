@@ -111,17 +111,17 @@ function find_gram(cat, pos, up, down) {
   if(cat == 'main') {
     wuxing = MAP[pos[0]][2];
     $('.wuxing').text(wuxing);
+    let self = pos[1];
+    if(self > 5) self -= 4;
+    else if(self) self = 6 - self;
+    let other = (self + 3) % 6;
+    $('.mark').removeClass('on').text('');
+    $('.mark').eq(self).addClass('on').text('世');
+    $('.mark').eq(other).addClass('on').text('应');
   } else {
     wuxing = $('.wuxing').text();
   }
   wuxing = WUXING.indexOf(wuxing);
-  let self = pos[1];
-  if(self > 5) self -= 4;
-  else if(self) self = 6 - self;
-  let other = (self + 3) % 6;
-  $('.mark').removeClass('on').text('');
-  $('.mark').eq(self).addClass('on').text('世');
-  $('.mark').eq(other).addClass('on').text('应');
   let data = MAP[up].slice(3, 6).concat(MAP[down].slice(6));
   $.each(data, function(idx, item){
     let attr = WUXING.indexOf(DIZHI[item.substr(1)]);
