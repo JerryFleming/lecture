@@ -9,6 +9,9 @@
 input {
   font-size: 1em;
 }
+.date span {
+  display: block;
+}
 </style>
 </head>
 <body>
@@ -23,6 +26,7 @@ input {
 <input type="input" class="hour" size="2"/>时
 <br/>
 <p class="date"></p>
+<div class="history"></div>
 
 <script>
 var now = new Date();
@@ -49,10 +53,15 @@ $('input').change(function(){
     var cal = calendar.lunar2solar(year, month, day, hour, leap);
   }
   if(cal === -1) $('.date').text('日期选择不正确');
-  else $('.date').text(`${cal.gzYear}年${cal.gzMonth}月${cal.gzDay}日${cal.gzHour}时`);
+  else {
+    var is_leap = leap ? '(润月)' : '';
+    var prefix = `<span>${year}年${month}月${day}日${hour}时${is_leap}</span>`;
+    $('.date').html(`${prefix}${cal.gzYear}年${cal.gzMonth}月${cal.gzDay}日${cal.gzHour}时`);
+    $('.history').append($('.date')[0].outerHTML);
+  }
 });
 var cal = calendar.solar2lunar();
-$('.date').text(`${cal.gzYear}年${cal.gzMonth}月${cal.gzDay}日${cal.gzHour}时`);
+$('.date').html(`<span>现在是</span>${cal.gzYear}年${cal.gzMonth}月${cal.gzDay}日${cal.gzHour}时`);
 </script>
 
 </body>
