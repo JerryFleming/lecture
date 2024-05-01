@@ -13,6 +13,9 @@
   color: blue;
   cursor: pointer;
 }
+.sep.self {
+  margin-top: 50px;
+}
 .sep.self:before {
   content: "本卦";
 }
@@ -26,7 +29,6 @@
   border-spacing: 5px;
   border-collapse: separate;
   font-size: 16px;
-  margin-bottom: 50px;
 }
 .change {
   text-align: center;
