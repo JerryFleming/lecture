@@ -127,3 +127,6 @@
 .xiang:not(.row):before {
   content: "象辞";
 }
+.opaque {
+  opacity: .2;
+}

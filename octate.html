@@ -131,6 +131,11 @@ function find_gram(cat, pos, up, down) {
     else if(attr == (wuxing + 2) % 5) prefix = '妻财';
     else if(attr == (wuxing + 5 - 2) % 5) prefix = '官鬼';
     $(`.${cat}.gram`).eq(idx).html(`<span>${prefix}</span><span></span><span>${item}</span>`);
+    var main = $('.main.gram').eq(idx), sub = $('.sub.gram').eq(idx);
+    if(main.hasClass('up') && sub.hasClass('up') || main.hasClass('down') && sub.hasClass('down'))
+      sub.addClass('opaque');
+    else
+      sub.removeClass('opaque');
   });
 }
 
