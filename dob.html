@@ -49,13 +49,15 @@ $('input').change(function(){
     leap = $('.leap')[0].checked;
   if(src.hasClass('solar')) {
     var cal = calendar.solar2lunar(year, month, day, hour);
+    var source = '公历';
   } else {
     var cal = calendar.lunar2solar(year, month, day, hour, leap);
+    var source = '农历';
   }
   if(cal === -1) $('.date').text('日期选择不正确');
   else {
     var is_leap = leap ? '(润月)' : '';
-    var prefix = `<span>${year}年${month}月${day}日${hour}时${is_leap}</span>`;
+    var prefix = `<span>${source} ${year}年${month}月${day}日${hour}时${is_leap}</span>`;
     $('.date').html(`${prefix}${cal.gzYear}年${cal.gzMonth}月${cal.gzDay}日${cal.gzHour}时`);
     $('.history').append($('.date')[0].outerHTML);
   }
