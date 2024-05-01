@@ -54,6 +54,7 @@
   margin-right: 20px;
   text-align: center;
   display: inline-block;
+  border: 1px dotted transparent;
 }
 .mark.on {
   border: 1px dotted black;
@@ -63,30 +64,39 @@
   font-size: 30px;
 }
 .gram {
-  width: 140px;
   height: 20px;
+}
+.gram span {
+  display: inline-block;
   text-align: center;
 }
-.gram span:nth-child(2) {
-  display: inline-block;
-  width: 40px;
+.gram span:nth-child(1), .gram span:nth-child(3) {
+  width: 60px;
+}
+.gram.up span:nth-child(2) {
+  width: 24px;
+  background-color: transparent;
+}
+.gram.down span:nth-child(2) {
+  width: 24px;
+  background-color: white;
+  position: relative;
+}
+.gram.down span:nth-child(2):before {
+  content: "";
+  left: 0;
+  right: 0;
+  top: -2px;
+  bottom: -2px;
+  position: absolute;
+  background-color: white;
 }
 .gram.up {
   background-color: red;
 }
 .gram.down {
   background-color: black;
-  position: relative;
   color: white;
-}
-.gram.down:before {
-  position: absolute;
-  content: "";
-  width: 24px;
-  left: 60px;
-  top: 0;
-  bottom: 0;
-  background-color: white;
 }
 .bible td {
   font-size: smaller;

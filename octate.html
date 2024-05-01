@@ -115,7 +115,7 @@ function find_gram(cat, pos, up, down) {
     if(self > 5) self -= 4;
     else if(self) self = 6 - self;
     let other = (self + 3) % 6;
-    $('.mark').removeClass('on').text('');
+    $('.mark').removeClass('on').text('　');
     $('.mark').eq(self).addClass('on').text('世');
     $('.mark').eq(other).addClass('on').text('应');
   } else {
@@ -130,7 +130,7 @@ function find_gram(cat, pos, up, down) {
     else if(attr == (wuxing + 5 - 1) % 5) prefix = '父母';
     else if(attr == (wuxing + 2) % 5) prefix = '妻财';
     else if(attr == (wuxing + 5 - 2) % 5) prefix = '官鬼';
-    $(`.${cat}.gram`).eq(idx).html(`<span>${prefix}</span><span></span><span>${item}</span>`);
+    $(`.${cat}.gram`).eq(idx).html(`<span>${prefix}</span><span>　</span><span>${item}</span>`);
     var main = $('.main.gram').eq(idx), sub = $('.sub.gram').eq(idx);
     if(main.hasClass('up') && sub.hasClass('up') || main.hasClass('down') && sub.hasClass('down'))
       sub.addClass('opaque');
