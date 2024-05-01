@@ -270,16 +270,19 @@ var calendar = {
     var y = parseInt(yPara);
     var m = parseInt(mPara);
     var d = parseInt(dPara);
-    var h = Math.ceil((hPara - 1) / 2);
+    var h = parseInt(hPara);
     //年份限定、上限
     if (y < 1900 || y > 2100) {
+      console.log('Year out of range.');
       return -1; // undefined转换为数字变为NaN
     }
     //公历传参最下限
     if (y === 1900 && m === 1 && d < 31) {
+      console.log('Date to early.');
       return -1;
     }
     if (h > 23 || h < 0) {
+      console.log('Hour out of range.');
       return -1;
     }
 
@@ -288,9 +291,8 @@ var calendar = {
     if (!y) {
       objDate = new Date();
     } else {
-      objDate = new Date(y, parseInt(m) - 1, d);
+      objDate = new Date(y, parseInt(m) - 1, d, h);
     }
-    if (!h) h = 0;
     var i,
       leap = 0,
       temp = 0;
@@ -298,6 +300,7 @@ var calendar = {
     y = objDate.getFullYear();
     m = objDate.getMonth() + 1;
     d = objDate.getDate();
+    h = Math.ceil((objDate.getHours() - 1) / 2);
     var offset = (Date.UTC(objDate.getFullYear(), objDate.getMonth(), objDate.getDate()) - Date.UTC(1900, 0, 31)) / 86400000;
     for (i = 1900; i < 2101 && offset > 0; i++) {
       temp = this.lYearDays(i);
@@ -431,17 +434,20 @@ var calendar = {
    * !important! 参数区间1900.1.31~2100.12.1
    * @param isLeapMonth  lunar month is leap or not.[如果是农历闰月第四个参数赋值true即可]
    */
-  lunar2solar: function lunar2solar(y, m, d, isLeapMonth) {
+  lunar2solar: function lunar2solar(y, m, d, h, isLeapMonth) {
     y = parseInt(y);
     m = parseInt(m);
     d = parseInt(d);
+    h = parseInt(h);
     isLeapMonth = !!isLeapMonth;
     var leapMonth = this.leapMonth(y);
     this.leapDays(y);
     if (isLeapMonth && leapMonth !== m) {
+      console.log(`Leap month for year ${y} is ${leapMonth}`);
       return -1;
     } //传参要求计算该闰月公历 但该年得出的闰月与传参的月份并不同
     if (y === 2100 && m === 12 && d > 1 || y === 1900 && m === 1 && d < 31) {
+      console.log(`Args out of range.`);
       return -1;
     } //超出了最大极限值
     var day = this.monthDays(y, m);
@@ -452,6 +458,7 @@ var calendar = {
       _day = this.leapDays(y, m);
     }
     if (y < 1900 || y > 2100 || d > _day) {
+      console.log(`Year/day out of range.`);
       return -1;
     } //参数合法性效验
 
@@ -484,6 +491,6 @@ var calendar = {
     var cY = calObj.getUTCFullYear();
     var cM = calObj.getUTCMonth() + 1;
     var cD = calObj.getUTCDate();
-    return this.solar2lunar(cY, cM, cD);
+    return this.solar2lunar(cY, cM, cD, h);
   }
 };
