@@ -118,7 +118,7 @@
 .diagram:before {
   content: "卦象";
 }
-.title:before {
+.title:before:not(.row) {
   content: "卦辞";
 }
 .tuan:before {
