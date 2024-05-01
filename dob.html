@@ -8,9 +8,31 @@
 <style>
 input {
   font-size: 1em;
+  border: 1px dotted black;
 }
 p span {
   display: block;
+}
+
+.pushable {
+  background: hsl(340deg 100% 32%);*
+  /*background-color: #04AA6D;  Green */
+  border-radius: 3px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline-offset: 4px;
+}
+.front {
+  display: block;
+  padding: 3px 10px;
+  border-radius: 3px;
+  background: hsl(345deg 100% 47%);
+  color: white;
+  transform: translateY(-4px);
+}
+.pushable:active .front {
+  transform: translateY(-1px);
 }
 </style>
 </head>
@@ -24,7 +46,7 @@ p span {
 <input type="radio" name="src" class="solar" checked="checked"/>公历
 <input type="radio" name="src" class="lunar"/>农历
 <span><input type="checkbox" name="leap" class="leap"/>润月</span>
-<button>确认</button>
+<button class="pushable"><span class="front">确认</span></button>
 <br/>
 <p class="date"></p>
 <hr/>
@@ -61,7 +83,7 @@ $('button').click(function(){
   if(cal === -1) $('.date').text('日期选择不正确');
   else {
     var content = $('.date').clone().html();
-    $('.history').append(`<p>${content}</p>`);
+    $('.history').prepend(`<p>${content}</p>`);
     var is_leap = leap ? '(润月)' : '';
     var prefix = `<span>${source} ${year}年${month}月${day}日${hour}时${is_leap}</span>`;
     $('.date').html(`${prefix}${cal.gzYear}年${cal.gzMonth}月${cal.gzDay}日${cal.gzHour}时`);
