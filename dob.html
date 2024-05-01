@@ -9,23 +9,25 @@
 input {
   font-size: 1em;
 }
-.date span {
+p span {
   display: block;
 }
 </style>
 </head>
 <body>
 生日：
-<input type="radio" name="src" class="solar" checked="checked"/>公历
-<input type="radio" name="src" class="lunar"/>农历
-<span><input type="checkbox" name="leap" class="leap"/>润月</span>
-<br/>
 <input type="input" class="year" size="4"/>年
 <input type="input" class="month" size="2"/>月
 <input type="input" class="day" size="2"/>日
 <input type="input" class="hour" size="2"/>时
 <br/>
+<input type="radio" name="src" class="solar" checked="checked"/>公历
+<input type="radio" name="src" class="lunar"/>农历
+<span><input type="checkbox" name="leap" class="leap"/>润月</span>
+<button>确认</button>
+<br/>
 <p class="date"></p>
+<hr/>
 <div class="history"></div>
 
 <script>
@@ -35,12 +37,14 @@ $('.month').val(now.getMonth()+1);
 $('.day').val(now.getDate());
 $('.hour').val(now.getHours());
 $('.leap').parent().hide();
-
-$('input').change(function(){
+$('input[name="src"]').click(function(){
   if($('.lunar')[0].checked)
     $('.leap').parent().show();
   else
     $('.leap').parent().hide();
+});
+
+$('button').click(function(){
   let src = $('input[name="src"]:checked'),
     year = $('.year').val(),
     month = $('.month').val(),
@@ -56,10 +60,11 @@ $('input').change(function(){
   }
   if(cal === -1) $('.date').text('日期选择不正确');
   else {
+    var content = $('.date').clone().html();
+    $('.history').append(`<p>${content}</p>`);
     var is_leap = leap ? '(润月)' : '';
     var prefix = `<span>${source} ${year}年${month}月${day}日${hour}时${is_leap}</span>`;
     $('.date').html(`${prefix}${cal.gzYear}年${cal.gzMonth}月${cal.gzDay}日${cal.gzHour}时`);
-    $('.history').append($('.date')[0].outerHTML);
   }
 });
 var cal = calendar.solar2lunar();
