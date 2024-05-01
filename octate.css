@@ -118,12 +118,12 @@
 .diagram:before {
   content: "卦象";
 }
-.title:before:not(.row) {
+.title:not(.row):before {
   content: "卦辞";
 }
 .tuan:before {
   content: "彖辞";
 }
-.xiang:before:not(.row) {
+.xiang:not(.row):before {
   content: "象辞";
 }
