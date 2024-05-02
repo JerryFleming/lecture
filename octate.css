@@ -15,6 +15,7 @@
 }
 .sep.self {
   margin-top: 50px;
+  text-align: right;
 }
 .sep.self:before {
   content: "本卦";
