@@ -26,6 +26,10 @@
 .nobreak {
   width: 2em;
 }
+.date {
+  display: inline-block;
+  padding-left: 20px;
+}
 .hexagram {
   border-spacing: 5px;
   border-collapse: separate;
