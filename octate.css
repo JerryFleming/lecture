@@ -5,16 +5,21 @@
 .sep:before {
   position: absolute;
   background-color: #e1f5fe;
-  left: 30%;
-  top: -12px;
+  left: 50%;
+  bottom: -10px;
   padding: 2px 5px;;
 }
 .hide {
+  position: absolute;
+  display: block;
   color: blue;
   cursor: pointer;
+  right: 20px;
+  bottom: -10px;
+  padding: 2px 5px;;
+  background-color: #e1f5fe;
 }
 .sep.self {
-  margin-top: 50px;
   text-align: right;
 }
 .sep.self:before {
@@ -27,13 +32,13 @@
   width: 2em;
 }
 .date {
-  display: inline-block;
-  padding-left: 20px;
+  text-align: center;
 }
 .hexagram {
   border-spacing: 5px;
   border-collapse: separate;
   font-size: 16px;
+  margin: 20px;
 }
 .change {
   text-align: center;
