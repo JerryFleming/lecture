@@ -45,7 +45,7 @@ p span {
 <br/>
 <input type="radio" name="src" class="solar" checked="checked"/>公历
 <input type="radio" name="src" class="lunar"/>农历
-<span><input type="checkbox" name="leap" class="leap"/>润月</span>
+<span class="wrap"><input type="checkbox" name="leap" class="leap"/>润月</span>
 <button class="pushable"><span class="front">确认</span></button>
 <br/>
 <p class="date"></p>
@@ -62,7 +62,8 @@ $('.leap').parent().hide();
 $('input[type="text"]').click(function(){
   $(this).select();
 });
-$('input[type="text"]').click(function(){
+$('input[type="radio"]').click(function(){
+  $('span.wrap').toggle($('.lunar')[0].checked);
 });
 
 $('button').click(function(){
@@ -82,8 +83,12 @@ $('button').click(function(){
   if(cal === -1) $('.date').text('日期选择不正确');
   else {
     var content = $('.date').clone().html();
-    $('.history').prepend(`<p>${content}</p>`);
+    var ele = `<p>${content}</p>`;
+    var children = $('.history').children();
+    if(children.length == 0 || ele != children[0].outerHTML)
+      $('.history').prepend(ele);
     var is_leap = leap ? '(润月)' : '';
+    if(src.hasClass('solar')) is_leap = '';
     var prefix = `<span>${source} ${year}年${month}月${day}日${hour}时${is_leap}</span>`;
     $('.date').html(`${prefix}${cal.gzYear}年${cal.gzMonth}月${cal.gzDay}日${cal.gzHour}时`);
   }
