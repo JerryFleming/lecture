@@ -1,11 +1,12 @@
 .sep {
   border-top: 1px dotted black;
   position: relative;
+  margin-top: 36px;
 }
 .sep:before {
   position: absolute;
   background-color: #e1f5fe;
-  left: 20%;
+  left: 30px;
   bottom: -10px;
   padding: 2px 5px;;
 }
@@ -14,7 +15,7 @@
   display: block;
   color: blue;
   cursor: pointer;
-  right: 20px;
+  right: 30px;
   bottom: -10px;
   padding: 2px 5px;;
   background-color: #e1f5fe;
@@ -38,8 +39,7 @@
   border-spacing: 5px;
   border-collapse: separate;
   font-size: 16px;
-  margin: 20px;
-  margin-bottom: 40px;
+  margin: 20px auto;
 }
 .change {
   text-align: center;

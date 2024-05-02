@@ -175,8 +175,8 @@ $('.gram').click(function(){
 $('.hide').click(function(){
   $('.sep.other').toggle();
   $('.bible.sub').toggle();
-  $('td.sub').toggle();
-  $('.change').toggle();
+  $('td.sub').css('visibility', $('td.sub').css('visibility') == 'visible' ? 'hidden' : 'visible');
+  $('.change').css('visibility', $('.change').css('visibility') == 'visible' ? 'hidden' : 'visible');
 });
 
 find_names('main', 'up');
