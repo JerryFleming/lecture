@@ -93,6 +93,7 @@ td.origin {
 }
 .gram.origin {
   cursor: auto;
+  opacity: .3;
 }
 .gram span {
   display: inline-block;
