@@ -20,8 +20,14 @@
   padding: 2px 5px;;
   background-color: #e1f5fe;
 }
+.hide.origin {
+  right: 130px;
+}
 .hide.on {
   border: 1px solid black;
+}
+td.origin {
+  display: none;
 }
 .sep.self {
   text-align: right;
@@ -54,6 +60,7 @@
 .prefix {
   position: relative;
   width: 2em;
+  padding-right: 5px;
   display: inline-block;
 }
 .wuxing {
@@ -83,6 +90,9 @@
 .gram {
   height: 20px;
   cursor: pointer;
+}
+.gram.origin {
+  cursor: auto;
 }
 .gram span {
   display: inline-block;

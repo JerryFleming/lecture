@@ -13,47 +13,54 @@
 
 <table class="hexagram">
   <tr>
-    <td colspan="3" class="date"></td>
+    <td colspan="4" class="date"></td>
   </tr>
 
   <tr>
-    <td class="names self"><span class="prefix"></span><span class="name">乾</span><span class="wuxing"></span></td>
+    <td class="names origin"><span class="prefix"></span><span class="name">乾</span><span class="wuxing"></span></td>
+    <td class="names self"><span class="prefix"></span><span class="name">乾</span></td>
     <td class="change">之</td>
     <td class="names other"><span class="prefix"></span><span class="name">乾</span></td>
   </tr>
   <tr>
+    <td class="origin gram up"></td>
     <td class="self gram up"></td>
     <td class="mark">　</td>
     <td class="other gram up"></td>
   </tr>
   <tr>
+    <td class="origin gram up"></td>
     <td class="self gram up"></td>
     <td class="mark">　</td>
     <td class="other gram up"></td>
   </tr>
   <tr>
+    <td class="origin gram up"></td>
     <td class="self gram up"></td>
     <td class="mark">　</td>
     <td class="other gram up"></td>
   </tr>
   <tr>
+    <td class="origin gram up"></td>
     <td class="self gram up"></td>
     <td class="mark">　</td>
     <td class="other gram up"></td>
   </tr>
   <tr>
+    <td class="origin gram up"></td>
     <td class="self gram up"></td>
     <td class="mark">　</td>
     <td class="other gram up"></td>
   </tr>
   <tr>
+    <td class="origin gram up"></td>
     <td class="self gram up"></td>
     <td class="mark">　</td>
     <td class="other gram up"></td>
   </tr>
 </table>
 
-<p class="sep self"><span class="hide on">变卦</span></p>
+<p class="sep self"><span class="hide origin">本卦</span><span class="hide other on">变卦</span></p>
 <table class="bible self">
   <tr><td class="prepend diagram"></td></tr>
   <tr><td class="prepend title"></td></tr>
@@ -142,46 +149,63 @@ function find_gram(cat, pos, up, down) {
 }
 
 function find_names(cat, clazz, current) {
-  let sum = 0; 
-  let names = $('.names.' + cat);
-  $(`td.gram.${cat}`).each(function(idx, ele){
-    var bit = $(ele).hasClass('up') ? 0 : 1;
-    var weight = 6 - (idx % 6) - 1;
-    sum += 2**weight * bit;
-    if(ele == current && cat == 'self')
-      $('td.gram.other').eq(idx)
-        .removeClass('up').removeClass('down').addClass(clazz);
-  });
-  names.find('.name').text(ORDER[sum]);
-  let down = sum % 8, up = Math.floor(sum / 8);
-  if(up == down) names.find('.prefix').text('');
-  else names.find('.prefix').text(`${MAP[up][1]}${MAP[down][1]}`);
-  find_gram(cat, HEXAGRAM[ORDER[sum]], up, down);
-
-  find_content(cat, sum);
+  let sum = 0, names = $('.names.' + cat);
+  if(cat == 'origin') {
+    sum = HEXAGRAM[ORDER[clazz]]
+    names.find('.name').text(MAP[sum[0]][0]);
+    console.log(CHANGE[sum[1]], sum[1]);
+    names.find('.prefix').text(CHANGE[sum[1]]);
+    find_gram(cat, sum, sum[0], sum[0]);
+  } else {
+    $(`td.gram.${cat}`).each(function(idx, ele){
+      var bit = $(ele).hasClass('up') ? 0 : 1;
+      var weight = 6 - (idx % 6) - 1;
+      sum += 2**weight * bit;
+      if(ele == current && cat == 'self')
+        $('td.gram.other').eq(idx)
+          .removeClass('up').removeClass('down').addClass(clazz);
+    });
+    names.find('.name').text(ORDER[sum]);
+    let down = sum % 8, up = Math.floor(sum / 8);
+    if(up == down) names.find('.prefix').text('');
+    else names.find('.prefix').text(`${MAP[up][1]}${MAP[down][1]}`);
+    find_gram(cat, HEXAGRAM[ORDER[sum]], up, down);
+    find_content(cat, sum);
+    return sum;
+  }
 }
 var lunar = calendar.solar2lunar();
 $('.date').text(`${lunar.lYear}年${lunar.IMonthCn+lunar.IDayCn}，${lunar.gzYear}年${lunar.gzMonth}月${lunar.gzDay}日`);
 
-$('.gram').click(function(){
+$('.gram:not(.origin)').click(function(){
   let clazz = 'up';
   if($(this).hasClass('up')) clazz = 'down';
   $(this).removeClass('up').removeClass('down').addClass(clazz);
   let cat = $(this).hasClass('self') ? 'self' : 'other';
-  find_names(cat, clazz, this);
+  let found = find_names(cat, clazz, this);
   find_names(cat == 'self' ? 'other' : 'self', clazz, this);
+  if(cat == 'self')
+    find_names('origin', found, this);
 });
 
-$('.hide').click(function(){
+$('.hide.other').click(function(){
   $(this).toggleClass('on');
   $('.sep.other').toggle();
   $('.bible.other').toggle();
   $('td.other').css('visibility', $('td.other').css('visibility') == 'visible' ? 'hidden' : 'visible');
   $('.change').css('visibility', $('.change').css('visibility') == 'visible' ? 'hidden' : 'visible');
 });
+$('.hide.origin').click(function(){
+  $(this).toggleClass('on');
+  $('td.self').toggle();
+  $('td.origin').toggle();
+});
+
+
 
 find_names('self', 'up');
 find_names('other', 'up');
+find_names('origin', 0);
 </script>
 
 </body>
