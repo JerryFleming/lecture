@@ -17,44 +17,44 @@
   </tr>
 
   <tr>
-    <td class="names main"><span class="prefix"></span><span class="name">乾</span><span class="wuxing"></span></td>
+    <td class="names self"><span class="prefix"></span><span class="name">乾</span><span class="wuxing"></span></td>
     <td class="change">之</td>
-    <td class="names sub"><span class="prefix"></span><span class="name">乾</span></td>
+    <td class="names other"><span class="prefix"></span><span class="name">乾</span></td>
   </tr>
   <tr>
-    <td class="main gram up"></td>
+    <td class="self gram up"></td>
     <td class="mark">　</td>
-    <td class="sub gram up"></td>
+    <td class="other gram up"></td>
   </tr>
   <tr>
-    <td class="main gram up"></td>
+    <td class="self gram up"></td>
     <td class="mark">　</td>
-    <td class="sub gram up"></td>
+    <td class="other gram up"></td>
   </tr>
   <tr>
-    <td class="main gram up"></td>
+    <td class="self gram up"></td>
     <td class="mark">　</td>
-    <td class="sub gram up"></td>
+    <td class="other gram up"></td>
   </tr>
   <tr>
-    <td class="main gram up"></td>
+    <td class="self gram up"></td>
     <td class="mark">　</td>
-    <td class="sub gram up"></td>
+    <td class="other gram up"></td>
   </tr>
   <tr>
-    <td class="main gram up"></td>
+    <td class="self gram up"></td>
     <td class="mark">　</td>
-    <td class="sub gram up"></td>
+    <td class="other gram up"></td>
   </tr>
   <tr>
-    <td class="main gram up"></td>
+    <td class="self gram up"></td>
     <td class="mark">　</td>
-    <td class="sub gram up"></td>
+    <td class="other gram up"></td>
   </tr>
 </table>
 
-<p class="sep self"><span class="hide">显示/隐藏变卦</span></p>
-<table class="bible main">
+<p class="sep self"><span class="hide on">变卦</span></p>
+<table class="bible self">
   <tr><td class="prepend diagram"></td></tr>
   <tr><td class="prepend title"></td></tr>
   <tr><td class="prepend tuan"></td></tr>
@@ -75,7 +75,7 @@
 </table>
 
 <p class="sep other"></p>
-<table class="bible sub">
+<table class="bible other">
   <tr><td class="prepend diagram"></td></tr>
   <tr><td class="prepend title"></td></tr>
   <tr><td class="prepend tuan"></td></tr>
@@ -110,7 +110,7 @@ function find_content(cat, idx) {
 
 function find_gram(cat, pos, up, down) {
   var wuxing;
-  if(cat == 'main') {
+  if(cat == 'self') {
     wuxing = MAP[pos[0]][2];
     $('.wuxing').text(wuxing);
     let self = pos[1];
@@ -133,11 +133,11 @@ function find_gram(cat, pos, up, down) {
     else if(attr == (wuxing + 2) % 5) prefix = '妻财';
     else if(attr == (wuxing + 5 - 2) % 5) prefix = '官鬼';
     $(`.${cat}.gram`).eq(idx).html(`<span>${prefix}</span><span>　</span><span>${item}</span>`);
-    var main = $('.main.gram').eq(idx), sub = $('.sub.gram').eq(idx);
-    if(main.hasClass('up') && sub.hasClass('up') || main.hasClass('down') && sub.hasClass('down'))
-      sub.addClass('opaque');
+    var self = $('.self.gram').eq(idx), other = $('.other.gram').eq(idx);
+    if(self.hasClass('up') && other.hasClass('up') || self.hasClass('down') && other.hasClass('down'))
+      other.addClass('opaque');
     else
-      sub.removeClass('opaque');
+      other.removeClass('opaque');
   });
 }
 
@@ -148,8 +148,8 @@ function find_names(cat, clazz, current) {
     var bit = $(ele).hasClass('up') ? 0 : 1;
     var weight = 6 - (idx % 6) - 1;
     sum += 2**weight * bit;
-    if(ele == current && cat == 'main')
-      $('td.gram.sub').eq(idx)
+    if(ele == current && cat == 'self')
+      $('td.gram.other').eq(idx)
         .removeClass('up').removeClass('down').addClass(clazz);
   });
   names.find('.name').text(ORDER[sum]);
@@ -167,20 +167,21 @@ $('.gram').click(function(){
   let clazz = 'up';
   if($(this).hasClass('up')) clazz = 'down';
   $(this).removeClass('up').removeClass('down').addClass(clazz);
-  let cat = $(this).hasClass('main') ? 'main' : 'sub';
+  let cat = $(this).hasClass('self') ? 'self' : 'other';
   find_names(cat, clazz, this);
-  find_names(cat == 'main' ? 'sub' : 'main', clazz, this);
+  find_names(cat == 'self' ? 'other' : 'self', clazz, this);
 });
 
 $('.hide').click(function(){
+  $(this).toggleClass('on');
   $('.sep.other').toggle();
-  $('.bible.sub').toggle();
-  $('td.sub').css('visibility', $('td.sub').css('visibility') == 'visible' ? 'hidden' : 'visible');
+  $('.bible.other').toggle();
+  $('td.other').css('visibility', $('td.other').css('visibility') == 'visible' ? 'hidden' : 'visible');
   $('.change').css('visibility', $('.change').css('visibility') == 'visible' ? 'hidden' : 'visible');
 });
 
-find_names('main', 'up');
-find_names('sub', 'up');
+find_names('self', 'up');
+find_names('other', 'up');
 </script>
 
 </body>

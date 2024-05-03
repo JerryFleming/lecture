@@ -20,11 +20,14 @@
   padding: 2px 5px;;
   background-color: #e1f5fe;
 }
+.hide.on {
+  border: 1px solid black;
+}
 .sep.self {
   text-align: right;
 }
 .sep.self:before {
-  content: "本卦";
+  content: "原卦";
 }
 .sep.other:before {
   content: "变卦";
@@ -79,6 +82,7 @@
 }
 .gram {
   height: 20px;
+  cursor: pointer;
 }
 .gram span {
   display: inline-block;
