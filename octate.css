@@ -108,6 +108,7 @@ tr.on .mark.on {
 .gram {
   height: 20px;
   cursor: pointer;
+  white-space: nowrap;
 }
 .gram.origin {
   cursor: auto;
