@@ -10,10 +10,9 @@
 <link rel="stylesheet" href="octate.css">
 </head>
 <body>
-
 <table class="hexagram">
   <tr>
-    <td colspan="4" class="date"></td>
+    <td colspan="4" class="date"><span></span><span></span></td>
   </tr>
 
   <tr>
@@ -198,7 +197,7 @@ function find_names(cat, clazz, current) {
   }
 }
 var lunar = calendar.solar2lunar();
-$('.date').text(`${lunar.lYear}年${lunar.IMonthCn+lunar.IDayCn}，${lunar.gzYear}年${lunar.gzMonth}月${lunar.gzDay}日(${lunar.gzXun}空)`);
+$('.date span:first-child').text(`${lunar.lYear}年${lunar.IMonthCn+lunar.IDayCn}，${lunar.gzYear}年${lunar.gzMonth}月${lunar.gzDay}日(${lunar.gzXun}空)`);
 
 $('.gram:not(.origin)').click(function(){
   let clazz = 'up';
@@ -227,7 +226,29 @@ $('.hexagram tr').click(function(){
   $(this).addClass('on');
 });
 $('.hide.link').click(function(){
-  location = `?${FOUND.self},${FOUND.other}`;
+  var url = location.href.split('?')[0] + `?${FOUND.self},${FOUND.other}`;
+
+	if (navigator.clipboard && window.isSecureContext) {
+			navigator.clipboard.writeText(url);
+	} else {
+		const textArea = document.createElement("textarea");
+		textArea.value = url;
+		textArea.style.position = "absolute";
+		textArea.style.left = "-999999px";
+		document.body.prepend(textArea);
+		textArea.select();
+		try {
+				document.execCommand('copy');
+		} catch (error) {
+				console.error(error);
+		} finally {
+				textArea.remove();
+		}
+	}
+  $('.date span:last-child').text('链接已复制').show();
+  setTimeout(function(){
+    $('.date span:last-child').fadeOut(2000);
+  }, 1000);
 });
 if(location.search) {
   $('.hide.link').addClass('on');

@@ -47,6 +47,7 @@ td.origin {
 }
 .date {
   text-align: center;
+  position: relative;
 }
 .hexagram {
   border-spacing: 5px;
@@ -185,4 +186,17 @@ tr.on .mark.on {
 }
 .opaque {
   opacity: .2;
+}
+.date span:last-child {
+  position: absolute;
+  padding-top: 5px;
+  display: none;
+  padding-bottom: 5px;
+  border: 1px dotted black;
+  border-radius: 15px;
+  background-color: rgb(225, 233, 233);
+  text-align: center;
+  top: 0;
+  left: 0;
+  right: 0;
 }
