@@ -160,10 +160,18 @@ var FOUND = {
   self: 0,
   other: 0,
 };
+function find_group(ord) {
+  var arr = [1, 2, 4, 8, 16, 8, 7];
+  for(var i=0; i<7; i++) {
+    if(ord % 8 == Math.floor(ord/8)) break;
+    ord ^= arr[i];
+  }
+  return [ord % 8, i];
+}
 function find_names(cat, clazz, current) {
   let sum = 0, names = $('.names.' + cat);
   if(cat == 'origin') {
-    sum = HEXAGRAM[ORDER[clazz]]
+    sum = find_group(clazz);
     names.find('.name').text(MAP[sum[0]][0]);
     names.find('.prefix').text(CHANGE[sum[1]]);
     find_gram(cat, sum, sum[0], sum[0]);
@@ -173,7 +181,7 @@ function find_names(cat, clazz, current) {
     let down = sum % 8, up = Math.floor(sum / 8);
     if(up == down) names.find('.prefix').text('');
     else names.find('.prefix').text(`${MAP[up][1]}${MAP[down][1]}`);
-    find_gram(cat, HEXAGRAM[ORDER[sum]], up, down, sum);
+    find_gram(cat, find_group(sum), up, down, sum);
     find_content(cat, sum);
     FOUND[cat] = sum;
     return sum;
@@ -190,7 +198,7 @@ function find_names(cat, clazz, current) {
     let down = sum % 8, up = Math.floor(sum / 8);
     if(up == down) names.find('.prefix').text('');
     else names.find('.prefix').text(`${MAP[up][1]}${MAP[down][1]}`);
-    find_gram(cat, HEXAGRAM[ORDER[sum]], up, down);
+    find_gram(cat, find_group(sum), up, down);
     find_content(cat, sum);
     FOUND[cat] = sum;
     return sum;
