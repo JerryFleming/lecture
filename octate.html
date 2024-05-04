@@ -18,7 +18,7 @@
 
   <tr>
     <td class="names origin"><span class="prefix"></span><span class="name">乾</span><span class="wuxing"></span></td>
-    <td class="names self"><span class="prefix"></span><span class="name">乾</span></td>
+    <td class="names self"><span class="prefix"></span><span class="name">乾</span><span class="wuxing"></span></td>
     <td class="change">之</td>
     <td class="names other"><span class="prefix"></span><span class="name">乾</span></td>
   </tr>
@@ -60,7 +60,11 @@
   </tr>
 </table>
 
-<p class="sep self"><span class="hide origin">本卦</span><span class="hide other on">变卦</span></p>
+<p class="sep self">
+  <span class="hide link">链接</span>
+  <span class="hide origin">本卦</span>
+  <span class="hide other on">变卦</span>
+</p>
 <table class="bible self">
   <tr><td class="prepend diagram"></td></tr>
   <tr><td class="prepend title"></td></tr>
@@ -115,7 +119,7 @@ function find_content(cat, idx) {
   });
 }
 
-function find_gram(cat, pos, up, down) {
+function find_gram(cat, pos, up, down, sum) {
   var wuxing;
   if(cat == 'self') {
     wuxing = MAP[pos[0]][2];
@@ -133,6 +137,11 @@ function find_gram(cat, pos, up, down) {
   wuxing = WUXING.indexOf(wuxing);
   let data = MAP[up].slice(3, 6).concat(MAP[down].slice(6));
   $.each(data, function(idx, item){
+    if(sum !== undefined) {
+      var bit = 2**(5-idx);
+      $(`.${cat}.gram`).eq(idx).removeClass('up').removeClass('down')
+        .addClass((sum& bit)==bit ? 'down' : 'up');
+    }
     let attr = WUXING.indexOf(DIZHI[item.substr(1)]);
     if(attr == wuxing) prefix = '兄弟';
     else if(attr == (wuxing + 1) % 5) prefix = '子孙';
@@ -148,14 +157,27 @@ function find_gram(cat, pos, up, down) {
   });
 }
 
+var FOUND = {
+  self: 0,
+  other: 0,
+};
 function find_names(cat, clazz, current) {
   let sum = 0, names = $('.names.' + cat);
   if(cat == 'origin') {
     sum = HEXAGRAM[ORDER[clazz]]
     names.find('.name').text(MAP[sum[0]][0]);
-    console.log(CHANGE[sum[1]], sum[1]);
     names.find('.prefix').text(CHANGE[sum[1]]);
     find_gram(cat, sum, sum[0], sum[0]);
+  } else if(!isNaN(clazz)) {
+    names.find('.name').text(ORDER[clazz]);
+    sum = clazz;
+    let down = sum % 8, up = Math.floor(sum / 8);
+    if(up == down) names.find('.prefix').text('');
+    else names.find('.prefix').text(`${MAP[up][1]}${MAP[down][1]}`);
+    find_gram(cat, HEXAGRAM[ORDER[sum]], up, down, sum);
+    find_content(cat, sum);
+    FOUND[cat] = sum;
+    return sum;
   } else {
     $(`td.gram.${cat}`).each(function(idx, ele){
       var bit = $(ele).hasClass('up') ? 0 : 1;
@@ -171,11 +193,12 @@ function find_names(cat, clazz, current) {
     else names.find('.prefix').text(`${MAP[up][1]}${MAP[down][1]}`);
     find_gram(cat, HEXAGRAM[ORDER[sum]], up, down);
     find_content(cat, sum);
+    FOUND[cat] = sum;
     return sum;
   }
 }
 var lunar = calendar.solar2lunar();
-$('.date').text(`${lunar.lYear}年${lunar.IMonthCn+lunar.IDayCn}，${lunar.gzYear}年${lunar.gzMonth}月${lunar.gzDay}日`);
+$('.date').text(`${lunar.lYear}年${lunar.IMonthCn+lunar.IDayCn}，${lunar.gzYear}年${lunar.gzMonth}月${lunar.gzDay}日(${lunar.gzXun}空)`);
 
 $('.gram:not(.origin)').click(function(){
   let clazz = 'up';
@@ -200,12 +223,23 @@ $('.hide.origin').click(function(){
   $('td.self').toggle();
   $('td.origin').toggle();
 });
-
-
-
-find_names('self', 'up');
-find_names('other', 'up');
-find_names('origin', 0);
+$('.hexagram tr').click(function(){
+  $(this).addClass('on');
+});
+$('.hide.link').click(function(){
+  location = `?${FOUND.self},${FOUND.other}`;
+});
+if(location.search) {
+  $('.hide.link').addClass('on');
+  var found = location.search.substr(1).split(',');
+  var ret = find_names('self', parseInt(found[0]));
+  find_names('other', parseInt(found[1]));
+  find_names('origin', ret);
+} else {
+  find_names('self', 'up');
+  find_names('other', 'up');
+  find_names('origin', 0);
+}
 </script>
 
 </body>

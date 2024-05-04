@@ -20,6 +20,10 @@
   padding: 2px 5px;;
   background-color: #e1f5fe;
 }
+.hide.link {
+  left: 130px;
+  right: auto;
+}
 .hide.origin {
   right: 130px;
 }
@@ -79,9 +83,22 @@ td.origin {
   text-align: center;
   display: inline-block;
   border: 1px dotted transparent;
+  position: relative;
 }
 .mark.on {
   border: 1px dotted black;
+}
+tr.on .mark:not(.on):before {
+  position: absolute;
+  content: "";
+  width: 3px;
+  height: 3px;
+  left: 50%;
+  top: 50%;
+  background-color: red;
+}
+tr.on .mark.on {
+  border: 1px solid black;
 }
 .name {
   font-weight: bold;

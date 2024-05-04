@@ -212,6 +212,15 @@ var calendar = {
     return this.Gan[offset % 10] + this.Zhi[offset % 12];
   },
   /**
+   * 传入offset偏移量返回干支对应旬空
+   */
+  toXun: function toGanZhi(offset) {
+    var gan = offset % 10, zhi = offset % 12;
+    var end = (10 - gan + zhi) % 12;
+    return this.Zhi[end] + this.Zhi[end + 1];
+  },
+
+  /**
    * 传入公历(!)y年获得该年第n个节气的公历日期
    * @param y y公历年(1900-2100)
    * @param n n二十四节气中的第几个节气(1~24)；从n=1(小寒)算起
@@ -392,6 +401,7 @@ var calendar = {
     var dayCyclical = Date.UTC(y, sm, 1, 0, 0, 0, 0) / 86400000 + 25567 + 10;
     var gzD_ = dayCyclical + d - 1;
     var gzD = this.toGanZhi(gzD_);
+    var gzXun = this.toXun(gzD_);
     //该日期所属的星座
     var astro = this.toAstro(m, d);
     var solarDate = y + '-' + m + '-' + d;
@@ -420,6 +430,7 @@ var calendar = {
       'gzMonth': gzM,
       'gzDay': gzD,
       'gzHour': gzH,
+      'gzXun': gzXun,
       'isToday': isToday,
       'isLeap': isLeap,
       'nWeek': nWeek,
