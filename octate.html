@@ -260,8 +260,8 @@ $('.hide.link').click(function(){
 if(location.search) {
   $('.hide.link').addClass('on');
   var found = location.search.substr(1).split(',');
-  var ret = find_names('self', ORDER.indexOf(parseInt(found[0])));
-  find_names('other', ORDER.indexOf(parseInt(found[1])));
+  var ret = find_names('self', ORDER.indexOf(found[0]));
+  find_names('other', ORDER.indexOf(found[1]));
   find_names('origin', ret);
 } else {
   find_names('self', 'up');
