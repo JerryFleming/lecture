@@ -234,25 +234,24 @@ $('.hexagram tr').click(function(){
   $(this).addClass('on');
 });
 $('.hide.link').click(function(){
-  var url = location.href.split('?')[0] + `?${FOUND.self},${FOUND.other}`;
-
-	if (navigator.clipboard && window.isSecureContext) {
-			navigator.clipboard.writeText(url);
-	} else {
-		const textArea = document.createElement("textarea");
-		textArea.value = url;
-		textArea.style.position = "absolute";
-		textArea.style.left = "-999999px";
-		document.body.prepend(textArea);
-		textArea.select();
-		try {
-				document.execCommand('copy');
-		} catch (error) {
-				console.error(error);
-		} finally {
-				textArea.remove();
-		}
-	}
+  var url = location.href.split('?')[0] + `?${ORDER[FOUND.self]},${ORDER[FOUND.other]}`;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url);
+  } else {
+    const textArea = document.createElement("textarea");
+    textArea.value = url;
+    textArea.style.position = "absolute";
+    textArea.style.left = "-999999px";
+    document.body.prepend(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      textArea.remove();
+    }
+  }
   $('.date span:last-child').text('链接已复制').show();
   setTimeout(function(){
     $('.date span:last-child').fadeOut(2000);
@@ -261,8 +260,8 @@ $('.hide.link').click(function(){
 if(location.search) {
   $('.hide.link').addClass('on');
   var found = location.search.substr(1).split(',');
-  var ret = find_names('self', parseInt(found[0]));
-  find_names('other', parseInt(found[1]));
+  var ret = find_names('self', ORDER.indexOf(parseInt(found[0])));
+  find_names('other', ORDER.indexOf(parseInt(found[1])));
   find_names('origin', ret);
 } else {
   find_names('self', 'up');
