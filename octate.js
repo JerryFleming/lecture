@@ -159,12 +159,12 @@ $(function(){
     var found = decodeURI(location.search.substr(1)).split(',');
     var self = ORDER.indexOf(found[0]), other = ORDER.indexOf(found[1]);
     if(self == -1) {
-      warn(`原卦名有误:${found[0]}`);
-      return 0;
+      warn(`原卦名有误:${found[0]}，使用默认名`);
+      self = 0;
     }
     if(other == -1) {
-      warn(`变卦名有误:${found[1]}`);
-      return 0;
+      warn(`变卦名有误:${found[1]}，使用默认名`);
+      other = 0;
     }
     var ret = find_names('self', self);
     find_names('other', other);
