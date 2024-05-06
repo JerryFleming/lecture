@@ -80,14 +80,14 @@ $('button.copy').click(function(){
 });
 
 $('button.big').click(function(){
-  var fsize = parseInt($('div.quote').css('font-size'));
-  var small = parseInt((fsize - 1)*.66);
-  $('div.quote').css('font-size', fsize + 1 + 'px')
+  var fsize = parseInt($('div.quote').css('font-size')) + 1;
+  var small = Math.floor(fsize *.66);
+  $('div.quote').css('font-size', fsize + 'px')
   $('div.source').css('font-size', small + 'px')
 });
 $('button.small').click(function(){
-  var fsize = parseInt($('div.quote').css('font-size'));
-  var small = parseInt((fsize - 1)*.66);
+  var fsize = parseInt($('div.quote').css('font-size')) - 1;
+  var small = Math.floor(fsize *.66);
   $('div.quote').css('font-size', fsize - 1 + 'px')
   $('div.source').css('font-size', small + 'px')
 });
