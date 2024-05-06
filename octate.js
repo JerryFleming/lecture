@@ -134,7 +134,7 @@ $('.hexagram tr').click(function(){
 });
 $('.hide.link').click(function(){
   var url = location.href.split('?')[0] + `?${ORDER[FOUND.self]},${ORDER[FOUND.other]}`;
-  url += '\n' + encodeURI(url);
+  url = encodeURI(url);
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(url);
   } else {
