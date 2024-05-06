@@ -12,6 +12,7 @@ function show()
   setTimeout(function(){
     $('.source').addClass('show');
     typist.pause();
+    $('button.underline').click();
   }, timeout);
 }
 
@@ -31,7 +32,6 @@ function hl()
     node.addClass('hl');
     delay = true;
   }
-  console.log(cnt, delay);
   cnt++;
   if(cnt > dest.children().length)
   {
