@@ -96,7 +96,7 @@ tr.on .mark:not(.on):before {
   height: 3px;
   left: 50%;
   top: 50%;
-  background-color: red;
+  background-color: black;
 }
 tr.on .mark.on {
   border: 1px solid black;
