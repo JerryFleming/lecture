@@ -3,15 +3,15 @@ var dest = $('.dest'), src = $('.src'),
   all = [], range = [];
 var typist = $('.typist').get(0), write = $('.write').get(0);
 
-function show()
+function showChar()
 {
   $(dest.children()[curr]).addClass('show');
   curr++;
   if(curr < dest.children().length) return;
   clearInterval(intval);
+  $('.source').addClass('show');
+  typist.pause();
   setTimeout(function(){
-    $('.source').addClass('show');
-    typist.pause();
     $('button.underline').click();
   }, timeout);
 }
@@ -20,11 +20,11 @@ $('button.start').click(function(){
   curr = 0;
   $('.source').removeClass('show');
   dest.children().removeClass('show').removeClass('hl');
-  intval = setInterval(show, timeout);
+  intval = setInterval(showChar, timeout);
   typist.play();
 });
 
-function hl()
+function hlRange()
 {
   var delay = false, node = $(dest.contents()[cnt]);
   if($.inArray(cnt, range) != -1 && node[0].tagName == 'B')
@@ -38,8 +38,8 @@ function hl()
     write.pause();
     return;
   }
-  if(delay) setTimeout(hl, timeout);
-  else hl();
+  if(delay) setTimeout(hlRange, timeout);
+  else hlRange();
 }
 
 $('button.underline').click(function(){
@@ -58,7 +58,7 @@ $('button.underline').click(function(){
   write.play();
   dest.children().removeClass('hl');
   cnt = 0;
-  hl();
+  hlRange();
 });
 
 $('button.copy').click(function(){
