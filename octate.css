@@ -47,6 +47,7 @@ td.origin {
 }
 .nobreak {
   width: 2em;
+  white-space: pre-nowrap;
 }
 .date {
   text-align: center;
