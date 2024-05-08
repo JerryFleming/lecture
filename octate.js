@@ -15,6 +15,7 @@ function find_gram(cat, pos, up, down, sum) {
   if(cat == 'self') {
     wuxing = MAP[pos[0]][2];
     $('.wuxing').text(wuxing);
+    $('.wuxing').removeClass('up').removeClass('down').addClass(MAP[pos[0]].slice(-1) < 4 ? 'up': 'down')
     let self = pos[1];
     if(self > 5) self -= 4;
     else if(self) self = 6 - self;
@@ -26,7 +27,7 @@ function find_gram(cat, pos, up, down, sum) {
     wuxing = $('.wuxing').text();
   }
   wuxing = WUXING.indexOf(wuxing);
-  let data = MAP[up].slice(3, 6).concat(MAP[down].slice(6));
+  let data = MAP[up].slice(3, 6).concat(MAP[down].slice(6, 9));
   $.each(data, function(idx, item){
     if(sum !== undefined) {
       var bit = 2**(5-idx);
