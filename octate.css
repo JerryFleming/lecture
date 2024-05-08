@@ -46,7 +46,7 @@ td.origin {
   content: "变卦";
 }
 .nobreak {
-  width: 2em;
+  min-width: 2em;
   white-space: pre-nowrap;
 }
 .date {
