@@ -7,12 +7,14 @@ function showChar()
 {
   $(dest.children()[curr]).addClass('show');
   curr++;
+  write.pause();
+  write.currentTime = 0;
   if(curr < dest.children().length) return;
   clearInterval(intval);
   $('.source').addClass('show');
   typist.pause();
   setTimeout(function(){
-    $('button.underline').click();
+    $('button.underline').trigger('click');
   }, timeout);
 }
 
@@ -21,7 +23,9 @@ $('button.start').click(function(){
   $('.source').removeClass('show');
   dest.children().removeClass('show').removeClass('hl');
   intval = setInterval(showChar, timeout);
+  write.currentTime = 0;
   typist.play();
+  write.play();
 });
 
 function hlRange()
