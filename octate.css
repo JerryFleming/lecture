@@ -10,6 +10,9 @@
   bottom: -10px;
   padding: 2px 5px;;
 }
+.sep.other {
+  margin-top: 20px;
+}
 .hide {
   position: absolute;
   display: block;
@@ -153,7 +156,7 @@ tr.on .mark.on {
   background-color: black;
   color: white;
 }
-.bible td {
+.bible td, .bible th {
   font-size: smaller;
   vertical-align: top;
 }

@@ -59,6 +59,7 @@ $('button.underline').click(function(){
     started = !started;
   });
 
+  write.currentTime = 0;
   write.play();
   dest.children().removeClass('hl');
   cnt = 0;
