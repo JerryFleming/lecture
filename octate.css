@@ -102,12 +102,15 @@ td.origin {
 }
 tr.on .mark:not(.on):before {
   position: absolute;
-  content: "";
-  width: 3px;
-  height: 3px;
+  content: "✓";
   left: 50%;
   top: 50%;
-  background-color: black;
+  width: 8px;
+  height: 14px;
+  font-size: 10px;
+  margin-left: -4px;
+  margin-top: -7px;
+  display: block;
 }
 tr.on .mark.on {
   border: 1px solid black;
