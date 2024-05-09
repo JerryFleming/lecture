@@ -160,21 +160,47 @@ tr.on .mark.on {
   background-color: black;
   color: white;
 }
-.bible {
-  border-spacing: 1px;
-  border-collapse: collapse;
-}
 .bible td, .bible th {
   font-size: smaller;
   vertical-align: top;
-  text-align: left;
-  border: 1px solid black;
 }
-.bible th {
+.grid tr:first-child {
   background-color: #e1f5fe !important;
 }
-.bible tr:nth-child(odd) td {
-  background-color: #eee;
+.grid tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+.grid tr:nth-child(odd) {
+  background-color: #dfdfdf;
+}
+.grid th, .grid td {
+  text-align: left;
+  border: 1px solid white;
+}
+.grid {
+  border-spacing: 1px;
+  border-collapse: collapse;
+}
+.prepend {
+  position: relative;
+}
+.prepend:before {
+  font-weight: bold;
+  display: inline-block;
+  margin-right: 5px;
+  background-color: #accff2;
+}
+.diagram:before {
+  content: "卦象";
+}
+.title:not(.row):before {
+  content: "卦辞";
+}
+.tuan:before {
+  content: "彖辞";
+}
+.xiang:not(.row):before {
+  content: "象辞";
 }
 .opaque {
   opacity: .2;
