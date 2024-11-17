@@ -19,6 +19,7 @@ POS = {}
 HSEG, VSEG = '+---', '|   '
 HLEN, VLEN = len(HSEG), 2
 WAITING = False
+FROZEN = False
 
 def save_session(fname):
   new = {'{}:{}'.format(*k):v for k, v in POS.items()}
@@ -34,7 +35,7 @@ def restore_session(fname):
   print('Reloaded saved session.')
 
 def clear_session():
-  print('Are you sure to clear the session? y/N')
+  message('Are you sure to clear the session? y/N', False)
   char = vim.eval('getcharstr()')
   vim.command( 'redraw')
   if char.lower() != 'y':
@@ -61,18 +62,20 @@ def check_win(pos, side):
         msg = 'You win!' if side == 'x' else 'You lose!'
         break
   if msg:
-    msg += ' Do you want to play again? y/N'
-    print(msg)
+    msg += '\nDo you want to play again? y/N'
+    message(msg, False)
     vim.command('redraw')
     char = vim.eval('getcharstr()')
     if char.lower() == 'y':
       POS.clear()
       draw_board()
     else:
-      print('Game over.')
-      global move_cursor, put_piece
-      move_cursor = lambda x: None
+      draw_board()
+      message('Game over!', False)
+      print('')
+      global put_piece, FROZEN
       put_piece = lambda: None
+      FROZEN = True
       return True
   return False
 
@@ -84,23 +87,27 @@ def move_cursor(direction):
     if vpos > VREPEAT - pieces:
       VPOS += 1
     else:
-      vv += VLEN
+      vpos += 1
   elif direction == 'k':
     if vpos < pieces:
       VPOS -= 1
     else:
-      vv -= VLEN
+      vpos -= 1
   elif direction == 'h':
     if hpos < pieces:
       HPOS -= 1
     else:
-      hh -= HLEN
+      hpos -= 1
   elif direction == 'l':
     if hpos > HREPEAT - pieces:
       HPOS += 1
     else:
-      hh += HLEN
+      hpos += 1
+  vpos = min(max(vpos, pieces), VREPEAT - pieces)
+  hpos = min(max(hpos, pieces), HREPEAT - pieces)
+  vv, hh = VSTART + vpos * VLEN + 1, HSTART + hpos * HLEN + 1
   vim.eval('cursor({}, {})'.format(vv, hh))
+  print('Position:', vpos, hpos)
   draw_board()
 
 def getpos():
@@ -132,7 +139,7 @@ def put_piece():
   _, _, vpos, hpos = getpos()
   pos = vpos + VPOS, hpos + HPOS
   if pos in POS:
-    print('The position is occupied.')
+    print('This position is occupied.')
     return
   POS[pos] = 'x'
   draw_board()
@@ -143,6 +150,8 @@ def put_piece():
 
 def draw_board(resize=False):
   global HSTART, VSTART, HREPEAT, VREPEAT
+  if FROZEN:
+    return
   HREPEAT, remain = divmod(vim.current.window.width, HLEN)
   if not remain:
     remain += HLEN # remove last open column
@@ -167,48 +176,65 @@ def draw_board(resize=False):
       if pos not in POS:
         continue
       lines[vv][hh] = POS.get(pos, ' ')
-  vim.command('set modifiable')
-  vim.current.buffer[:] = [''.join(x) for x in lines]
-  vim.command('set nomodifiable')
+  update_buffer([''.join(x) for x in lines])
   if resize:
-    vim. command('redraw')
     vv, hh = VSTART + VREPEAT // 2 * VLEN + 1, HSTART + HREPEAT // 2 * HLEN + 1, 
     vim.eval('cursor({}, {})'.format(vv, hh))
 
 def play():
-  msg = '''Gomoku
+  msg = '''
+  Gomoku
   You can play with computer directly by using the following commands:
-    j/k/h/l to move, x to put a piece, c to clear
+    j/k/h/l to move, x to put a piece, c to clear, z to position cursor
   `:Save fname` to save the current session.
   `:Resotre fname` to restore the saved session.
+
+  Do you want to move first? y/N
   '''
-  char = model_message(msg)
+  message(msg, model=True)
+  char = vim.eval('getcharstr()')
+  print('')
+  draw_board() # do this so we have VREPEAT/HREPEAT
+  vim.command('redraw')
   if char.lower() != 'y':
     POS[VREPEAT // 2, HREPEAT // 2] = 'o'
     draw_board(resize=True)
-    print('Your move now.')
+    print(f'Your move now.')
   else:
     draw_board(resize=True)
 
-def model_message(msg) :
+def update_buffer(lines):
+  vim.command('set modifiable')
+  vim.current.buffer[:] = lines
+  vim.command('set nomodifiable')
+  vim. command('redraw')
+
+def message(msg, model=True) :
   msg = textwrap.dedent(msg).strip().splitlines()
   width = max(len(x) for x in msg)
+  block, remain = divmod(width, HLEN)
+  if remain: # ensure covering multiple horizontal blocks
+    block += 1
+    width = block * HLEN
   gap = '|  {}  |'.format(' ' * width)
   sep = '+--{}--+'.format('-' * width)
   msg = [sep, gap] + ['|  {}  |'.format(x.ljust(width)) for x in msg] + [gap, sep]
   vpad = (vim.current.window.height - len(msg)) // 2
-  vrest = vim.current.window.height - len(msg) - vpad
-  empty = ' '* vim.current.window.width
-  msg = [x.center(vim.current.window.width) for x in msg]
-  vim.command('set modifiable')
-  vim.current.buffer[:] = vpad * [empty] + msg + vrest * [empty]
-  vim.command('set nomodifiable')
-  vim. command('redraw')
-  print('Do you want to move first? y/N')
-  char = vim.eval('getcharstr()')
-  print('')
-  vim.command('redraw')
-  return char
+  if model:
+    vrest = vim.current.window.height - len(msg) - vpad
+    empty = ' ' * vim.current.window.width
+    msg = [x.center(vim.current.window.width) for x in msg]
+    update_buffer(vpad * [empty] + msg + vrest * [empty])
+  else:
+    width += 6
+    indent = (vim.current.window.width - width) // 2
+    lines = vim.current.buffer[:]
+    for v in range(0, len(msg)):
+      vv = v + vpad
+      line = list(lines[vv][:])
+      line[indent:indent+width] = msg[v]
+      lines[vv] = ''.join(line)
+    update_buffer(lines)
 EOL
 
 command! Play python3 play()
