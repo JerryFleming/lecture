@@ -120,6 +120,7 @@ def auto_move():
   global WAITING
   WAITING = True
   print('Thinking...')
+  # for each existing piece, find max number of consecutive ones to the right, down, and down right
   while True:
     pos = random.randint(0, VREPEAT), random.randint(0, HREPEAT)
     if pos not in POS:

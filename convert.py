@@ -3,8 +3,29 @@ import re
 import os
 import glob
 import shutil
+import sys
 
-for fname in glob.glob('*docx'):
+base_string = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+def to_base(num, base):
+  ret = ''
+  while num:
+    ret += base_string[num % base]
+    num //= base
+  return ret[::-1] or '0'
+
+def rep(x):
+  if not isinstance(x, tuple):
+    fnd = x.group(1)
+  else:
+    fnd = x[0]
+  if len(fnd) > 1:
+    fnd = to_base(int(fnd), len(base_string))
+  if not isinstance(x, tuple):
+    return fnd
+  else:
+    return fnd, x[1]
+
+for fname in sorted(glob.glob('*docx')):
   base = fname.split('.')[0]
   with zipfile.ZipFile(fname, 'r') as ref:
     ref.extractall(base)
@@ -13,23 +34,16 @@ for fname in glob.glob('*docx'):
   doc = re.sub(r'<a[^:]+:[^>]+>', '', doc)
   doc = re.sub(r'<a:[^b][^>]+>', '', doc)
   doc = doc.strip().replace(' cstate="print"', '')
-  #doc = re.sub(r'(.{80})', r'\g<1>\n', doc)
-  idx = 50
-  ret = []
-  while True:
-    if idx >= len(doc):
-      ret.append(doc)
-      break
-    while doc[idx] in '<a:blip r:embed="rId1234567890"/>':
-      idx += 1
-    idx += 1
-    ret.append(doc[:idx])
-    doc = doc[idx:]
-    idx = 50
-  open('%s.txt' % base, 'w', encoding="utf-8").write('\n'.join(ret))
+  doc = re.sub(r'<a:blip r:embed="rId(\d+)"/>', rep, doc)
+  doc = re.sub(r'[ 　]*', r'', doc)
+  doc = re.sub(r'(.{%s})' % sys.argv[1], r'\g<1>\n', doc)
+  open('%s.txt' % base, 'w', encoding="utf-8").write(doc)
   doc = open('%s/word/_rels/document.xml.rels' % base).read()
-  match = re.findall(r'Id="(rId\d+)" Type="[^"]+" Target="media/(image\d+.png)"', doc)
+  match = re.findall(r'Id="rId(\d+)" Type="[^"]+" Target="media/(image\d+.png)"', doc)
   if match:
-    open('%s.csv' % base, 'w').write('\n'.join([','.join(x) for x in match]))
-    os.rename('%s/word/media' % base, '%s_media' % base)
+    open('%s.csv' % base, 'w').write('\n'.join([','.join(rep(x)) for x in match]) + '\n')
+    folder = '%s_media' % base
+    if os.path.exists(folder):
+      shutil.rmtree(folder)
+    os.rename('%s/word/media' % base, folder)
   shutil.rmtree(base)
