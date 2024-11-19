@@ -238,23 +238,27 @@ def message(msg, model=True) :
     update_buffer(lines)
 EOL
 
-command! Play python3 play()
-command! Draw python3 draw_board(True)
-command! -complete=file -bang -nargs=1 Save python3 save_session(<f-args>)
-command! -complete=file -bang -nargs=1 Restore python3 restore_session(<f-args>)
-"cc-u>: this clears out the line range that will be added when you start a command with a number.
-"norm! The ! after :norm ensures we don't use remapped commands.
-"nnoremap ‹silent> j :<c-u»norm! 2j<cr»
-nnoremap <silent> j :python3 move_cursor("j")<cr>
-nnoremap <silent> k :python3 move_cursor("k")<cr>
-nnoremap <silent> h :python3 move_cursor("h")<cr>
-nnoremap <silent> l :python3 move_cursor("l")<cr>
-nnoremap <silent> x :python3 put_piece()<cr>
-nnoremap <silent> c :python3 clear_session()<cr>
-autocmd VimResized * Draw
-:set nonumber
-:set ch=1
-:set nofoldenable
-:set nomodifiable
-:set mouse=
+function! Setup()
+  command! Play python3 play()
+  command! Draw python3 draw_board(True)
+  command! -complete=file -bang -nargs=1 Save python3 save_session(<f-args>)
+  command! -complete=file -bang -nargs=1 Restore python3 restore_session(<f-args>)
+  "cc-u>: this clears out the line range that will be added when you start a command with a number.
+  "norm! The ! after :norm ensures we don't use remapped commands.
+  "nnoremap ‹silent> j :<c-u»norm! 2j<cr»
+  nnoremap <silent> j :python3 move_cursor("j")<cr>
+  nnoremap <silent> k :python3 move_cursor("k")<cr>
+  nnoremap <silent> h :python3 move_cursor("h")<cr>
+  nnoremap <silent> l :python3 move_cursor("l")<cr>
+  nnoremap <silent> x :python3 put_piece()<cr>
+  nnoremap <silent> c :python3 clear_session()<cr>
+  autocmd VimResized * Draw
+  set nonumber
+  set ch=1
+  set nofoldenable
+  set nomodifiable
+  set mouse=
+endfunction
+call Setup()
+Play
 " shopt -s checkwinsize
