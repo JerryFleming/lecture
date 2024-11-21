@@ -1,12 +1,17 @@
 python3 << EOL
+import sys
+sys.path.insert(0, '.')
 import json
 import random
 import socket
 import time
 import textwrap
 import vim
+import numpy as np
 from threading import Thread
+import my
 
+AI = my.AI()
 # start position of horizontal/vertical lines
 HSTART, VSTART = 0, 1
 # repeat times of horizontal and vertical lines,
@@ -23,6 +28,7 @@ HSEG, VSEG = '+---', '|   '
 HLEN, VLEN = len(HSEG), 2
 WAITING = False
 FROZEN = False
+EMPTY, BLACK, WHITE = ' ', 'x', 'o'
 
 socket.setdefaulttimeout(.2)
 class Conn:
@@ -180,7 +186,7 @@ def check_win(pos, side):
     # Foreach direction, only check 5 consecutive pieces, up to the middle
     for start in range(5):
       if all(ptn[start: start+5]) and ptn[start]:
-        msg = 'You win!' if side == 'x' else 'You lose!'
+        msg = 'You win!' if side == BLACK else 'You lose!'
         break
   if msg:
     msg += '\nDo you want to play again? y/N'
@@ -258,15 +264,35 @@ def auto_move():
     vim.command('redraw')
     game_over()
     return True
-  # for each existing piece, find max number of consecutive ones to the right, down, and down right
-  if not pos:
+  if len(POS) == 0:
     while True:
       pos = random.randint(0, VREPEAT), random.randint(0, HREPEAT)
       if pos not in POS: break
-  POS[pos] = 'o'
+  elif len(POS) == 1:
+    vv, hh = list(POS.keys())[0]
+    if vv <= 5: vv += 1
+    elif vv >= VREPEAT - 5: vv -= 1
+    if hh <= 5: hh += 1
+    elif hh >= HREPEAT - 5: hh -= 1
+    pos = vv, hh
+  else: # use AI
+    min_vv, max_vv = -1100, 1100
+    min_hh, max_hh = -1100, 1100
+    for vv, hh in POS.keys():
+      min_vv = min(vv, min_vv)
+      max_vv = max(vv, max_vv)
+      min_hh = min(hh, min_hh)
+      max_hh = max(hh, max_hh)
+    board = np.full((max_vv - min_vv, max_hh - min_hh), EMPTY)
+    for key, val in POS.items():
+      vv, hh = key
+      board[vv-min_vv,hh-min_hh] = val
+    pos = AI.search_threat(BLACK, WHITE, board)
+    pos = pos[0] + min_vv, pos[1] + min_hh
+  POS[pos] = WHITE
   draw_board()
   vim.command('redraw')
-  ret = check_win(pos, 'o')
+  ret = check_win(pos, WHITE)
   if not ret:
     print('Your move now.')
   WAITING = False
@@ -280,12 +306,12 @@ def put_piece():
   if pos in POS:
     print('This position is occupied.')
     return
-  POS[pos] = 'x'
+  POS[pos] = BLACK
   if Conn.name:
     Conn.put = '{},{}'.format(*pos)
   draw_board()
   vim.command('redraw')
-  ret = check_win(pos, 'x')
+  ret = check_win(pos, BLACK)
   if not ret:
     auto_move()
 
@@ -315,7 +341,7 @@ def draw_board(resize=False):
       vv, hh = VSTART + v * VLEN, HSTART + h * HLEN
       pos = v + VPOS, h + HPOS
       if pos not in POS: continue
-      lines[vv][hh] = POS.get(pos, ' ')
+      lines[vv][hh] = POS.get(pos, EMPTY)
   update_buffer([''.join(x) for x in lines])
   if resize:
     vv, hh = VSTART + VREPEAT // 2 * VLEN + 1, HSTART + HREPEAT // 2 * HLEN + 1
@@ -348,7 +374,7 @@ def play():
   draw_board() # do this so we have VREPEAT/HREPEAT
   vim.command('redraw')
   if char.lower() != 'y':
-    POS[VREPEAT // 2, HREPEAT // 2] = 'o'
+    POS[VREPEAT // 2, HREPEAT // 2] = WHITE
     draw_board(resize=True)
     print(f'Your move now.')
   else:
