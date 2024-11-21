@@ -29,18 +29,21 @@ class Conn:
   name = None
   put = ''
   got = ''
+  server = None
 
 def server_loop(action):
+  global FROZEN
   while True:
     server = Conn.name
     if not server: break
     if action == 'receive':
       try:
         client, address = server.accept()
-        server.close()
+        Conn.server = server
         POS.clear()
         draw_board()
         Conn.got = ''
+        FROZEN = False
         Conn.name = client
         print(f'Accepted connection from {address}.')
       except socket.timeout:
@@ -53,6 +56,7 @@ def server_loop(action):
     if not client: continue
     msg = 'Connection to client closed.' if action == 'receive' else ''
     client_loop(action, msg)
+    Conn.name = Conn.server
 
 def client_loop(action, msg):
   while True:
@@ -98,6 +102,9 @@ def stop_conn():
   except Exception:
     pass
   Conn.name = None
+  if Conn.server:
+    Conn.server.close()
+    Conn.server = None
 
 def start_server(port):
   port = int(port)
@@ -331,12 +338,18 @@ def play():
     j/k/h/l to move, x to put a piece, c to clear, z to position cursor
   `:Save fname` to save the current session.
   `:Resotre fname` to restore the saved session.
+  `:Server port` to start server and move first after connection.
+  `:Client [host:]port` to start client.
+  `:Play` to start game.
+  `:Stop` to stop game and do normal editing.
 
   Do you want to move first? y/N
   '''
   if FROZEN == 'stopped':
     vim.command('call Setup()')
     FROZEN = False
+    draw_board(resize=True)
+    return
   else:
     message(msg, model=True)
   char = vim.eval('getcharstr()')
