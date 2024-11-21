@@ -24,7 +24,7 @@ HLEN, VLEN = len(HSEG), 2
 WAITING = False
 FROZEN = False
 
-socket.setdefaulttimeout(1)
+socket.setdefaulttimeout(.2)
 class Conn:
   name = None
   put = ''
@@ -60,7 +60,7 @@ def client_loop(action, msg):
     if not client: break
     if action == 'send':
       if not Conn.put:
-        time.sleep(.5)
+        time.sleep(.1)
         continue
       try:
         sent = client.send(Conn.put.encode())
@@ -257,7 +257,7 @@ def auto_move():
   if Conn.name and Conn.got == 'close':
     vim.command('redraw')
     char = vim.eval('getcharstr()')
-    if char.lower != 'y':
+    if char.lower() != 'y':
       game_over()
       return True
   # for each existing piece, find max number of consecutive ones to the right, down, and down right
