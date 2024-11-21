@@ -32,7 +32,7 @@ class Conn:
 
 def server_loop(action):
   while True:
-    server = Conn. name
+    server = Conn.name
     if not server: break
     if action == 'receive':
       try:
@@ -94,7 +94,7 @@ def client_loop(action, msg):
 
 def stop_conn():
   try:
-    Conn.name.send('close'.encode)
+    Conn.name.send('close'.encode())
   except Exception:
     pass
   Conn.name = None
@@ -257,7 +257,7 @@ def auto_move():
   if Conn.name and Conn.got == 'close':
     vim.command('redraw')
     char = vim.eval('getcharstr()')
-    if char.lower == 'y':
+    if char.lower != 'y':
       game_over()
       return True
   # for each existing piece, find max number of consecutive ones to the right, down, and down right
@@ -335,6 +335,7 @@ def play():
   Do you want to move first? y/N
   '''
   if FROZEN == 'stopped':
+    vim.command('call Setup()')
     FROZEN = False
   else:
     message(msg, model=True)
@@ -418,6 +419,7 @@ function! Setup()
   set nomodifiable
   set mouse=
 endfunction
+
 call Setup()
 Play
 " shopt -s checkwinsize
