@@ -29,7 +29,6 @@ class Conn:
   name = None
   put = ''
   got = ''
-  server = None
 
 def server_loop(action):
   global FROZEN
@@ -39,7 +38,7 @@ def server_loop(action):
     if action == 'receive':
       try:
         client, address = server.accept()
-        Conn.server = server
+        server.close()
         POS.clear()
         draw_board()
         Conn.got = ''
@@ -56,7 +55,6 @@ def server_loop(action):
     if not client: continue
     msg = 'Connection to client closed.' if action == 'receive' else ''
     client_loop(action, msg)
-    Conn.name = Conn.server
 
 def client_loop(action, msg):
   while True:
@@ -92,8 +90,6 @@ def client_loop(action, msg):
     pass
   Conn.name = None
   if msg:
-    if not FROZEN:
-      msg += ' Do you want to continue? y/N'
     print(msg)
 
 def stop_conn():
@@ -102,9 +98,6 @@ def stop_conn():
   except Exception:
     pass
   Conn.name = None
-  if Conn.server:
-    Conn.server.close()
-    Conn.server = None
 
 def start_server(port):
   port = int(port)
@@ -263,10 +256,8 @@ def auto_move():
       pos = int(vv), int(hh)
   if Conn.name and Conn.got == 'close':
     vim.command('redraw')
-    char = vim.eval('getcharstr()')
-    if char.lower() != 'y':
-      game_over()
-      return True
+    game_over()
+    return True
   # for each existing piece, find max number of consecutive ones to the right, down, and down right
   if not pos:
     while True:
