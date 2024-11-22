@@ -91,8 +91,8 @@ def client_loop(action, msg):
     pass
   Conn.name = None
   if msg:
-    message(msg, False)
     print(msg)
+    message(msg, False)
 
 def stop_conn():
   try:
@@ -260,9 +260,10 @@ def auto_move():
     vim.command('redraw')
     game_over()
     return True
-  while True:
-    pos = random.randint(0, VREPEAT), random.randint(0, HREPEAT)
-    if pos not in POS: break
+  if not pos:
+    while True:
+      pos = random.randint(0, VREPEAT), random.randint(0, HREPEAT)
+      if pos not in POS: break
   POS[pos] = WHITE
   draw_board()
   vim.command('redraw')
@@ -301,7 +302,7 @@ def draw_board(resize=False):
   remain = remain // 2 * ' '
   HSTART = len(remain) + HLEN//2
   VREPEAT = vim.current.window.height // VLEN
-  vline = remain + VSEG * HREPEAT + VSEG[1]
+  vline = remain + VSEG * HREPEAT + VSEG[0]
   hline = remain + HSEG * HREPEAT + HSEG[0]
   lines = [hline, vline] * VREPEAT
   if vim.current.window.height % VLEN:
@@ -341,6 +342,7 @@ def play():
     FROZEN = False
     draw_board(resize=True)
     POS.clear()
+    draw_board()
     return
   else:
     message(msg, model=True)
