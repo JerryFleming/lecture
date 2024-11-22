@@ -233,7 +233,7 @@ def move_cursor(direction):
   vv = Board.vstart + vpos * Board.vlen + 1
   hh = Board.hstart + hpos * Board.hlen + 1
   vim.eval('cursor({}, {})'.format(vv, hh))
-  print('Position:', vpos, hpos)
+  print('Position:', vpos + Board.vpos, hpos + Board.hpos)
   draw_board()
 
 def getpos():
