@@ -5,7 +5,7 @@ import socket
 import time
 import textwrap
 import vim
-from threading import Thread
+from threading import Thread, Timer
 
 # start position of horizontal/vertical lines
 HSTART, VSTART = 0, 1
@@ -23,8 +23,7 @@ HSEG, VSEG = '+---', '|   '
 # if you don't want the lines
 #HSEG, VSEG = '    ', '    '
 HLEN, VLEN = len(HSEG), 2
-WAITING = False
-FROZEN = False
+WAITING, FROZEN, MESSAGE = False, False, False
 EMPTY, BLACK, WHITE = ' ', 'x', 'o'
 
 socket.setdefaulttimeout(.2)
@@ -45,7 +44,7 @@ def server_loop(action):
         draw_board()
         Conn.got = ''
         Conn.name = client
-        print(f'Accepted connection from {address}.')
+        print(f'Accepted connection from {address}. Your move now.')
       except socket.timeout:
         continue
       except Exception as err:
@@ -294,6 +293,7 @@ def put_piece():
 
 def draw_board(resize=False):
   global HSTART, VSTART, HREPEAT, VREPEAT
+  if MESSAGE: return
   HREPEAT, remain = divmod(vim.current.window.width, HLEN)
   if not remain:
     remain += HLEN # remove last open column
@@ -363,7 +363,16 @@ def update_buffer(lines):
   vim.command('set nomodifiable')
   vim.command('redraw')
 
+def clear_message():
+  global MESSAGE
+  MESSAGE = False
+  vim.command('redraw')
+
 def message(msg, model=True) :
+  global MESSAGE
+  if not model:
+    MESSAGE = True
+    Timer(1, clear_message, []).start()
   msg = textwrap.dedent(msg).strip().splitlines()
   width = max(len(x) for x in msg)
   block, remain = divmod(width, HLEN)
