@@ -333,7 +333,7 @@ def draw_board(resize=False):
 def play():
   msg = '''
   Gomoku
-  You can play with computer directly by using the following commands:
+  You can play with computer directly or with your friend by using the following commands:
     j/k/h/l to move, x to put a piece, c to clear, z to position cursor
   `:Save fname` to save the current session.
   `:Resotre fname` to restore the saved session.
