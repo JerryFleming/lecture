@@ -7,30 +7,38 @@ import textwrap
 import vim
 from threading import Thread, Timer
 
-# start position of horizontal/vertical lines
-HSTART, VSTART = 0, 1
-# repeat times of horizontal and vertical lines,
-# which is the number of pieces allowed in a row/column
-HREPEAT, VREPEAT = 0, 0
-# starting position of viemport for pieces
-HPOS, VPOS = 0, 0
+socket.setdefaulttimeout(.2)
+
+class Color:
+  empty, black, white = ' ', 'x', 'o'
+class Board:
+  # repeat times of horizontal and vertical lanes,
+  # which is the number of pieces allowed in a row/column
+  vrepeat, hrepeat = 0, 0
+  # starting position of viemport for pieces
+  vpos, hpos = 0, 0
+  # lane separators, ensure first char is corner sep
+  vseg, hseg = '|   ', '+---'
+  # if you don't want the lines
+  #vseg, hseg = '    ', '    '
+  # each vlane is 2 physical lines (hbar and vbar)
+  vlen, hlen = 2, len(hseg)
+  # horizontal/vertical center position of top left cell
+  # hstart is to be calculated later (center aligned), vstart is fixed (top aligned)
+  # NB: vim position starts with 1, while python with 0
+  vstart, hstart = vlen // 2, 0
+class Conn:
+  name = None # connection handler
+  put = '' # msg to send
+  got = '' # msg received
+class Status:
+  waiting = False # waiting for computer/friend
+  frozen = False # game over etc
+  message = False # a msg is displayed (no clear until timeout)
 # position of pieces, either x or o, index by (v,h) position
 # on board (not physical line/column)
 # x is the first player or you, o is the second player or computer
 POS = {}
-# line separators, ensure first char is corner sep
-HSEG, VSEG = '+---', '|   '
-# if you don't want the lines
-#HSEG, VSEG = '    ', '    '
-HLEN, VLEN = len(HSEG), 2
-WAITING, FROZEN, MESSAGE = False, False, False
-EMPTY, BLACK, WHITE = ' ', 'x', 'o'
-
-socket.setdefaulttimeout(.2)
-class Conn:
-  name = None
-  put = ''
-  got = ''
 
 def server_loop(action):
   while True:
@@ -181,7 +189,7 @@ def check_win(pos, side):
     # Foreach direction, only check 5 consecutive pieces, up to the middle
     for start in range(5):
       if all(ptn[start: start+5]) and ptn[start]:
-        msg = 'You win!' if side == BLACK else 'You lose!'
+        msg = 'You win!' if side == Color.black else 'You lose!'
         break
   if msg:
     msg += '\nDo you want to play again? y/N'
@@ -198,32 +206,32 @@ def check_win(pos, side):
   return False
 
 def move_cursor(direction):
-  global HPOS, VPOS
   vv, hh, vpos, hpos = getpos()
   pieces = 5 # there are 5 pieces in a row/column to win
   if direction == 'j':
-    if vpos >= VREPEAT - pieces:
-      VPOS += 1
+    if vpos >= Board.vrepeat - pieces:
+      Board.vpos += 1
     else:
       vpos += 1
   elif direction == 'k':
     if vpos <= pieces:
-      VPOS -= 1
+      Board.vpos -= 1
     else:
       vpos -= 1
   elif direction == 'h':
     if hpos <= pieces:
-      HPOS -= 1
+      Board.hpos -= 1
     else:
       hpos -= 1
   elif direction == 'l':
-    if hpos >= HREPEAT - pieces:
-      HPOS += 1
+    if hpos >= Board.hrepeat - pieces:
+      Board.hpos += 1
     else:
       hpos += 1
-  vpos = min(max(vpos, pieces), VREPEAT - pieces)
-  hpos = min(max(hpos, pieces), HREPEAT - pieces)
-  vv, hh = VSTART + vpos * VLEN + 1, HSTART + hpos * HLEN + 1
+  vpos = min(max(vpos, pieces), Board.vrepeat - pieces)
+  hpos = min(max(hpos, pieces), Board.hrepeat - pieces)
+  vv = Board.vstart + vpos * Board.vlen + 1
+  hh = Board.hstart + hpos * Board.hlen + 1
   vim.eval('cursor({}, {})'.format(vv, hh))
   print('Position:', vpos, hpos)
   draw_board()
@@ -231,20 +239,19 @@ def move_cursor(direction):
 def getpos():
   _, vv, hh, _ = vim.eval('getpos(".")')
   vv, hh = int(vv), int(hh)
-  vpos, hpos = (vv - 1 - VSTART) // VLEN, (hh - 1 - HSTART) // HLEN
+  vpos = (vv - 1 - Board.vstart) // Board.vlen
+  hpos = (hh - 1 - Board.hstart) // Board.hlen
   return vv, hh, vpos, hpos
 
 def game_over():
-  global FROZEN
   draw_board()
   msg = 'Game over!'
   message(msg, False)
-  FROZEN = True
+  Status.frozen = True
   stop_conn()
 
 def auto_move():
-  global WAITING
-  WAITING = True
+  Status.waiting = True
   print('Thinking...')
   pos = None
   if Conn.name:
@@ -261,69 +268,69 @@ def auto_move():
     return True
   if not pos:
     while True:
-      pos = random.randint(0, VREPEAT), random.randint(0, HREPEAT)
+      pos = random.randint(0, Board.vrepeat), random.randint(0, Board.hrepeat)
       if pos not in POS: break
-  POS[pos] = WHITE
+  POS[pos] = Color.white
   draw_board()
   vim.command('redraw')
-  ret = check_win(pos, WHITE)
+  ret = check_win(pos, Color.white)
   if not ret:
     print('Your move now.')
-  WAITING = False
+  Status.waiting = False
 
 def put_piece():
-  if FROZEN:
+  if Status.frozen:
     return
-  if WAITING:
+  if Status.waiting:
     print('Not your turn yet.')
     return
   _, _, vpos, hpos = getpos()
-  pos = vpos + VPOS, hpos + HPOS
+  pos = vpos + Board.vpos, hpos + Board.hpos
   if pos in POS:
     print('This position is occupied.')
     return
-  POS[pos] = BLACK
+  POS[pos] = Color.black
   if Conn.name:
     Conn.put = '{},{}'.format(*pos)
   draw_board()
   vim.command('redraw')
-  ret = check_win(pos, BLACK)
+  ret = check_win(pos, Color.black)
   if not ret:
     auto_move()
 
 def draw_board(resize=False):
-  global HSTART, VSTART, HREPEAT, VREPEAT
-  if MESSAGE: return
-  HREPEAT, remain = divmod(vim.current.window.width, HLEN)
+  if Status.message: return
+  Board.hrepeat, remain = divmod(vim.current.window.width, Board.hlen)
   if not remain:
-    remain += HLEN # remove last open column
-    HREPEAT -= 1
+    remain += Board.hlen # remove last open column
+    Board.hrepeat -= 1
   remain -= 1 # close last open clumn
   remain = remain // 2 * ' '
-  HSTART = len(remain) + HLEN//2
-  VREPEAT = vim.current.window.height // VLEN
-  vline = remain + VSEG * HREPEAT + VSEG[0]
-  hline = remain + HSEG * HREPEAT + HSEG[0]
-  lines = [hline, vline] * VREPEAT
-  if vim.current.window.height % VLEN:
+  Board.hstart = len(remain) + Board.hlen // 2
+  Board.vrepeat = vim.current.window.height // Board.vlen
+  vline = remain + Board.vseg * Board.hrepeat + Board.vseg[0]
+  hline = remain + Board.hseg * Board.hrepeat + Board.hseg[0]
+  lines = [hline, vline] * Board.vrepeat
+  if vim.current.window.height % Board.vlen:
     lines.append(hline) # add closing bottom line
   else:
     lines = lines[:-1] # remove open bottom line
-    VREPEAT -= 1
+    Board.vrepeat -= 1
   lines = [list(x) for x in lines]
-  for v in range(VREPEAT):
-    for h in range(HREPEAT):
-      vv, hh = VSTART + v * VLEN, HSTART + h * HLEN
-      pos = v + VPOS, h + HPOS
+  for v in range(Board.vrepeat):
+    for h in range(Board.hrepeat):
+      pos = v + Board.vpos, h + Board.hpos
       if pos not in POS: continue
-      lines[vv][hh] = POS.get(pos, EMPTY)
+      vv = Board.vstart + v * Board.vlen
+      hh = Board.hstart + h * Board.hlen
+      lines[vv][hh] = POS.get(pos)
   update_buffer([''.join(x) for x in lines])
   if resize:
-    vv, hh = VSTART + VREPEAT // 2 * VLEN + 1, HSTART + HREPEAT // 2 * HLEN + 1
+    vv = Board.vstart + Board.vrepeat // 2 * Board.vlen + 1
+    hh = Board.hstart + Board.hrepeat // 2 * Board.hlen + 1
     vim.eval('cursor({}, {})'.format(vv, hh))
 
 def play():
-  global FROZEN
   msg = '''
   Gomoku
   You can play with computer directly by using the following commands:
@@ -337,9 +344,9 @@ def play():
 
   Do you want to move first? y/N
   '''
-  if FROZEN:
+  if Status.frozen:
     vim.command('call Setup()')
-    FROZEN = False
+    Status.frozen = False
     draw_board(resize=True)
     POS.clear()
     draw_board()
@@ -348,10 +355,10 @@ def play():
     message(msg, model=True)
   print('')
   char = vim.eval('getcharstr()')
-  draw_board() # do this so we have VREPEAT/HREPEAT
+  draw_board() # do this so we have vrepeat/hrepeat
   vim.command('redraw')
   if char.lower() != 'y':
-    POS[VREPEAT // 2, HREPEAT // 2] = WHITE
+    POS[Board.vrepeat // 2, Board.hrepeat // 2] = Color.white
     draw_board(resize=True)
     print(f'Your move now.')
   else:
@@ -364,21 +371,19 @@ def update_buffer(lines):
   vim.command('redraw')
 
 def clear_message():
-  global MESSAGE
-  MESSAGE = False
+  Status.message = False
   vim.command('redraw')
 
 def message(msg, model=True) :
-  global MESSAGE
   if not model:
-    MESSAGE = True
+    Status.message = True
     Timer(1, clear_message, []).start()
   msg = textwrap.dedent(msg).strip().splitlines()
   width = max(len(x) for x in msg)
-  block, remain = divmod(width, HLEN)
+  block, remain = divmod(width, Board.hlen)
   if remain: # ensure covering multiple horizontal blocks
     block += 1
-    width = block * HLEN
+    width = block * Board.hlen
   gap = '|  {}  |'.format(' ' * width)
   sep = '+--{}--+'.format('-' * width)
   msg = [sep, gap] + ['|  {}  |'.format(x.ljust(width)) for x in msg] + [gap, sep]
@@ -400,8 +405,7 @@ def message(msg, model=True) :
     update_buffer(lines)
 
 def stop_game():
-  global FROZEN
-  FROZEN = True
+  Status.frozen = True
   stop_conn()
   vim.command('nmapclear')
   vim.command('set modifiable')
