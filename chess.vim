@@ -191,10 +191,7 @@ def check_win(pos, side):
       if POS.get(ptn[start], '') != side: continue
       if any([POS.get(x, '')!=side for x in ptn[start:start+5]]): continue
       msg = 'You win!' if side == Color.black else 'You lose!'
-      marks = [[
-        Board.vstart + vpos * Board.vlen + 1,
-        Board.hstart + hpos * Board.hlen + 1,
-      ] for vpos, hpos in ptn[start:start+5]]
+      marks = [physical_pos(vpos, hpos) for vpos, hpos in ptn[start:start+5]]
       vim.command('call matchaddpos("WinPtn",%s)' % marks)
       Timer(2, clear_message, []).start()
       break
@@ -237,8 +234,7 @@ def move_cursor(direction):
       hpos += 1
   vpos = min(max(vpos, pieces), Board.vrepeat - pieces)
   hpos = min(max(hpos, pieces), Board.hrepeat - pieces)
-  vv = Board.vstart + vpos * Board.vlen + 1
-  hh = Board.hstart + hpos * Board.hlen + 1
+  vv, hh = physical_pos(vpos, hpos)
   vim.eval('cursor({}, {})'.format(vv, hh))
   print('Position:', vpos + Board.vpos, hpos + Board.hpos)
   draw_board()
@@ -246,6 +242,7 @@ def move_cursor(direction):
 def getpos():
   _, vv, hh, _ = vim.eval('getpos(".")')
   vv, hh = int(vv), int(hh)
+  # pysical position is 1-based
   vpos = (vv - 1 - Board.vstart) // Board.vlen
   hpos = (hh - 1 - Board.hstart) // Board.hlen
   return vv, hh, vpos, hpos
@@ -305,6 +302,13 @@ def put_piece():
   if not ret:
     auto_move()
 
+def physical_pos(vpos, hpos):
+  # pysical position is 1-based
+  return [
+    Board.vstart + vpos * Board.vlen + 1,
+    Board.hstart + hpos * Board.hlen + 1,
+  ]
+
 def draw_board(resize=False):
   if Status.message: return
   Board.hrepeat, remain = divmod(vim.current.window.width, Board.hlen)
@@ -328,13 +332,11 @@ def draw_board(resize=False):
     for h in range(Board.hrepeat):
       pos = v + Board.vpos, h + Board.hpos
       if pos not in POS: continue
-      vv = Board.vstart + v * Board.vlen
-      hh = Board.hstart + h * Board.hlen
-      lines[vv][hh] = POS.get(pos)
+      vv, hh = physical_pos(v, h)
+      lines[vv-1][hh-1] = POS.get(pos) # python index is 0-based
   update_buffer([''.join(x) for x in lines])
   if resize:
-    vv = Board.vstart + Board.vrepeat // 2 * Board.vlen + 1
-    hh = Board.hstart + Board.hrepeat // 2 * Board.hlen + 1
+    vv, hh = physical_pos(Board.vrepeat // 2, Board.hrepeat // 2)
     vim.eval('cursor({}, {})'.format(vv, hh))
 
 def play():
