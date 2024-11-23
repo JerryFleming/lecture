@@ -177,20 +177,27 @@ def clear_session():
 
 def check_win(pos, side):
   msg = ''
-  duration = 9 # number of consecutive pieces to check
+  duration = 9 # number of consecutive pieces to look ahead
   # Patterns on 4 directions: vertical, horizontal, slash, back slash.
   # This inclues pattersn startig from the give place and that ends there.
   for ptn in [
-    [POS.get((pos[0]-4+x, pos[1]), '') == side for x in range(duration)], # vertical
-    [POS.get((pos[0], pos[1]-4+x), '') == side for x in range(duration)], # horzontal
-    [POS.get((pos[0]-4+x, pos[1]-4+x), '') == side for x in range(duration)], # slash
-    [POS.get((pos[0]-4+x, pos[1]+4-x), '') == side for x in range(duration)], # back slash
+    [(pos[0]-4+x, pos[1]) for x in range(duration)], # vertical
+    [(pos[0], pos[1]-4+x) for x in range(duration)], # horzontal
+    [(pos[0]-4+x, pos[1]-4+x) for x in range(duration)], # slash
+    [(pos[0]-4+x, pos[1]+4-x) for x in range(duration)], # back slash
   ]:
     # Foreach direction, only check 5 consecutive pieces, up to the middle
     for start in range(5):
-      if all(ptn[start: start+5]) and ptn[start]:
-        msg = 'You win!' if side == Color.black else 'You lose!'
-        break
+      if POS.get(ptn[start], '') != side: continue
+      if any([POS.get(x, '')!=side for x in ptn[start:start+5]]): continue
+      msg = 'You win!' if side == Color.black else 'You lose!'
+      marks = [[
+        Board.vstart + vpos * Board.vlen + 1,
+        Board.hstart + hpos * Board.hlen + 1,
+      ] for vpos, hpos in ptn[start:start+5]]
+      vim.command('call matchaddpos("WinPtn",%s)' % marks)
+      Timer(2, clear_message, []).start()
+      break
   if msg:
     msg += '\nDo you want to play again? y/N'
     message(msg, False)
@@ -372,6 +379,7 @@ def update_buffer(lines):
 
 def clear_message():
   Status.message = False
+  vim.command('call clearmatches()')
   vim.command('redraw')
 
 def message(msg, model=True) :
@@ -433,6 +441,7 @@ function! Setup()
   nnoremap <silent> c :python3 clear_session()<cr>
   autocmd VimResized * python3 draw_board(True)
   autocmd QuitPre * Disconnect
+  highlight WinPtn ctermfg=red " WarningMsg
   set nonumber
   set ch=1
   set nofoldenable
