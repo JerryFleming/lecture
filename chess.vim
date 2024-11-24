@@ -10,7 +10,7 @@ from threading import Thread, Timer
 socket.setdefaulttimeout(.2)
 
 class Color:
-  empty, black, white = ' ', 'x', 'o'
+  empty, black, white = ' ', 'X', 'O'
 class Board:
   # repeat times of horizontal and vertical lanes,
   # which is the number of pieces allowed in a row/column
@@ -192,8 +192,7 @@ def check_win(pos, side):
       if any([POS.get(x, '')!=side for x in ptn[start:start+5]]): continue
       msg = 'You win!' if side == Color.black else 'You lose!'
       marks = [physical_pos(vpos, hpos) for vpos, hpos in ptn[start:start+5]]
-      vim.command('call matchaddpos("WinPtn",%s)' % marks)
-      Timer(2, clear_message, []).start()
+      vim.command('call matchaddpos("WarningMsg", %s)' % marks)
       break
   if msg:
     msg += '\nDo you want to play again? y/N'
@@ -237,6 +236,7 @@ def move_cursor(direction):
   vv, hh = physical_pos(vpos, hpos)
   vim.eval('cursor({}, {})'.format(vv, hh))
   print('Position:', vpos + Board.vpos, hpos + Board.hpos)
+  clear_message()
   draw_board()
 
 def getpos():
@@ -275,6 +275,7 @@ def auto_move():
       pos = random.randint(0, Board.vrepeat), random.randint(0, Board.hrepeat)
       if pos not in POS: break
   POS[pos] = Color.white
+  vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos))
   draw_board()
   vim.command('redraw')
   ret = check_win(pos, Color.white)
@@ -387,7 +388,6 @@ def clear_message():
 def message(msg, model=True) :
   if not model:
     Status.message = True
-    Timer(1, clear_message, []).start()
   msg = textwrap.dedent(msg).strip().splitlines()
   width = max(len(x) for x in msg)
   block, remain = divmod(width, Board.hlen)
@@ -443,7 +443,6 @@ function! Setup()
   nnoremap <silent> c :python3 clear_session()<cr>
   autocmd VimResized * python3 draw_board(True)
   autocmd QuitPre * Disconnect
-  highlight WinPtn ctermfg=red " WarningMsg
   set nonumber
   set ch=1
   set nofoldenable
