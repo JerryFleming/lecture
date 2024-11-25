@@ -39,6 +39,135 @@ class Status:
 # on board (not physical line/column)
 # x is the first player or you, o is the second player or computer
 POS = {}
+# score of each position, updated when new piece is filled
+SCORE = {}
+WILLWIN = 100000000
+
+class Pattern:
+  U4 = (
+    { 0, 1, 1, 1, 1, 0},
+  )
+  U3 = (
+    { 0, 1, 1, 1, 0, 0},
+    { 0, 0, 1, 1, 1, 0},
+    { 0, 1, 0, 1, 1, 0},
+    { 0, 1, 1, 0, 1, 0},
+  )
+  U2 = (
+    { 0, 0, 1, 1, 0, 0},
+    { 0, 1, 0, 1, 0, 0},
+    { 0, 0, 1, 0, 1, 0},
+    { 0, 1, 1, 0, 0, 0},
+    { 0, 0, 0, 1, 1, 0},
+    { 0, 1, 0, 0, 1, 0},
+  )
+  C4 = (
+    {-1, 1, 0, 1, 1, 1},
+    {-1, 1, 1, 0, 1, 1},
+    {-1, 1, 1, 1, 0, 1},
+    {-1, 1, 1, 1, 1, 0},
+    { 0, 1, 1, 1, 1,-1},
+    { 1, 0, 1, 1, 1,-1},
+    { 1, 1, 0, 1, 1,-1},
+    { 1, 1, 1, 0, 1,-1},
+  )
+  C3 = (
+    {-1, 1, 1, 1, 0, 0},
+    {-1, 1, 1, 0, 1, 0},
+    {-1, 1, 0, 1, 1, 0},
+    { 0, 0, 1, 1, 1,-1},
+    { 0, 1, 0, 1, 1,-1},
+    { 0, 1, 1, 0, 1,-1},
+    {-1, 1, 0, 1, 0, 1,-1},
+    {-1, 0, 1, 1, 1, 0,-1},
+    {-1, 1, 1, 0, 0, 1,-1},
+    {-1, 1, 0, 0, 1, 1,-1},
+  )
+  u4 = 0
+  u3 = 0
+  u2 = 0
+  c4 = 0
+  c3 = 0
+
+def score_ptn(ptn):
+  if ptn.u4: return WILLWIN
+  elif ptn.c4 > 1: return WILLWIN / 10
+  elif ptn.u3 > 0 and ptn.c4: return WILLWIN / 100
+  elif ptn.u3 > 1: return WILLWIN / 1000
+  elif ptn.u3 == 1:
+    if ptn.u2 == 3: return 40000
+    elif ptn.u2 == 2: return 38000
+    elif ptn.u2 == 1: return 35000
+    else: return 3450
+  elif ptn.c4 == 1:
+    if ptn.u2 == 3: return 4500
+    elif ptn.u2 == 2: return 4200
+    elif ptn.u2 == 1: return 4100
+    else: return 4050
+  elif ptn.c3 == 3:
+    if ptn.u2 == 1: return 2800
+  elif ptn.c3 == 2:
+    if ptn.u2 == 2: return 3000
+    elif ptn.u2 == 1: return 2900
+  if ptn.c3 == 1:
+    if ptn.u2 == 3: return 3400
+    elif ptn.u2 == 2: return 3300
+    elif ptn.u2 == 1: return 3100
+  elif ptn.u2 == 4: return 2700
+  elif ptn.u2 == 3: return 2500
+  elif ptn.u2 == 2: return 2000
+  elif ptn.u2 == 1: return 1000
+  return 0
+
+def contains(ptns, arr):
+  # number sign is reversed later, so chosen randomly here
+  mapping = {
+    0: Color.empty,
+    1: Color.white,
+    -1: Color.black,
+  }
+  for ptn in ptns:
+    pos = [mapping(x) for x in ptn]
+    neg = [mapping(-x) for x in ptn]
+    for idx in range(len(arr) - len(ptn)):
+      if ptn == arr[idx:idx+len(ptn)]: return True
+      if neg == arr[idx:idx+len(ptn)]: return True
+      continue
+  return False
+
+def find_score(pos, reverse=False):
+  if Conn.name:
+    # not playing with computer
+    return
+  other = Color.black if POS.get(pos) == Color.white else Color.white
+  if reverse:
+    other = POS.get(pos)
+  ptn = Pattern()
+  for direction in get_directions(pos):
+    ret = []
+    for start in range(4, -1, -1):
+      cur = POS.get(direction[start])
+      ret.insert(0, cur)
+      if cur == other: break
+    for start in range(5, 10):
+      cur = POS.get(direction[start])
+      ret.push(cur)
+      if cur == other: break
+    if contains(Pattern.U4, ret): ptn.u4 += 1
+    if contains(Pattern.U3, ret): ptn.u3 += 1
+    if contains(Pattern.C4, ret): ptn.c4 += 1
+    if contains(Pattern.C3, ret): ptn.c3 += 1
+    if contains(Pattern.U2, ret): ptn.u2 += 1
+  return score_ptn(ptn)
+
+def update_score(pos):
+  for rnd, direction in enumerate(get_directions(pos)):
+    for idx, item in enumerate(direction):
+      # for central point, should do it only once
+      if rnd and idx == 4: continue
+      score1 = find_score(item, True)
+      score2 = find_score(item, False)
+      SCORE[item] = score1 * 2 + score2
 
 def server_loop(action):
   while True:
@@ -177,21 +306,13 @@ def clear_session():
 
 def check_win(pos, side):
   msg = ''
-  duration = 9 # number of consecutive pieces to look ahead
-  # Patterns on 4 directions: vertical, horizontal, slash, back slash.
-  # This inclues pattersn startig from the give place and that ends there.
-  for ptn in [
-    [(pos[0]-4+x, pos[1]) for x in range(duration)], # vertical
-    [(pos[0], pos[1]-4+x) for x in range(duration)], # horzontal
-    [(pos[0]-4+x, pos[1]-4+x) for x in range(duration)], # slash
-    [(pos[0]-4+x, pos[1]+4-x) for x in range(duration)], # back slash
-  ]:
+  for direction in get_directions(pos):
     # Foreach direction, only check 5 consecutive pieces, up to the middle
     for start in range(5):
-      if POS.get(ptn[start], '') != side: continue
-      if any([POS.get(x, '')!=side for x in ptn[start:start+5]]): continue
+      if POS.get(direction[start], '') != side: continue
+      if any([POS.get(x, '')!=side for x in direction[start:start+5]]): continue
       msg = 'You win!' if side == Color.black else 'You lose!'
-      marks = [physical_pos(vpos, hpos) for vpos, hpos in ptn[start:start+5]]
+      marks = [physical_pos(vpos, hpos) for vpos, hpos in direction[start:start+5]]
       vim.command('call matchaddpos("WarningMsg", %s)' % marks)
       break
   if msg:
@@ -270,18 +391,37 @@ def auto_move():
     vim.command('redraw')
     game_over()
     return True
+  if not POS:
+    pos = Board.vrepeat // 2, Board.hrepeat // 2
+  else:
+    for item in SCORE:
+      if SCORE[item] != max(SCORE.values()): continue
+      pos = item
+      break
   if not pos:
     while True:
       pos = random.randint(0, Board.vrepeat), random.randint(0, Board.hrepeat)
       if pos not in POS: break
   POS[pos] = Color.white
   vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos))
+  #update_score(pos)
   draw_board()
   vim.command('redraw')
   ret = check_win(pos, Color.white)
   if not ret:
     print('Your move now.')
   Status.waiting = False
+
+def get_directions(pos):
+  duration = 9 # number of consecutive pieces to look ahead
+  # Patterns on 4 directions: vertical, horizontal, slash, back slash.
+  # This inclues pattersn startig from the give place and that ends there.
+  return [
+    [(pos[0]-4+x, pos[1]) for x in range(duration)], # vertical
+    [(pos[0], pos[1]-4+x) for x in range(duration)], # horzontal
+    [(pos[0]-4+x, pos[1]-4+x) for x in range(duration)], # slash
+    [(pos[0]-4+x, pos[1]+4-x) for x in range(duration)], # back slash
+  ]
 
 def put_piece():
   if Status.frozen:
@@ -295,6 +435,7 @@ def put_piece():
     print('This position is occupied.')
     return
   POS[pos] = Color.black
+  #update_score(pos)
   if Conn.name:
     Conn.put = '{},{}'.format(*pos)
   draw_board()
