@@ -9,24 +9,33 @@ from threading import Thread, Timer
 
 socket.setdefaulttimeout(.2)
 
-class Color:
-  empty, black, white = ' ', 'X', 'O'
+# board is h-center aligned and v-top aligned
+# NB: vim position starts with 1, while python with 0
 class Board:
+  _style = 2
+  if _style == 0:
+    # lane separators, ensure first char is corner sep
+    vseg, hseg = '|   ', '+---'
+  elif _style == 1:
+    vseg, hseg = ' . ', '   '
+  elif _style == 2:
+    # if you don't want lane marks
+    vseg, hseg = '    ', '    '
   # repeat times of horizontal and vertical lanes,
   # which is the number of pieces allowed in a row/column
   vrepeat, hrepeat = 0, 0
   # starting position of viemport for pieces
   vpos, hpos = 0, 0
-  # lane separators, ensure first char is corner sep
-  vseg, hseg = '|   ', '+---'
-  # if you don't want the lines
-  #vseg, hseg = '    ', '    '
   # each vlane is 2 physical lines (hbar and vbar)
   vlen, hlen = 2, len(hseg)
   # horizontal/vertical center position of top left cell
-  # hstart is to be calculated later (center aligned), vstart is fixed (top aligned)
-  # NB: vim position starts with 1, while python with 0
-  vstart, hstart = vlen // 2, 0
+  # hstart is updated later, vstart is fixed
+  vstart, hstart = vlen // 2, hlen // 2
+class Color:
+  # middle of vseg
+  empty = Board.vseg[Board.hlen // 2]
+  # X is you, O is for your opponent or computer
+  black, white = 'X', 'O'
 class Conn:
   name = None # connection handler
   put = '' # msg to send
@@ -35,9 +44,8 @@ class Status:
   waiting = False # waiting for computer/friend
   frozen = False # game over etc
   message = False # a msg is displayed (no clear until timeout)
-# position of pieces, either x or o, index by (v,h) position
-# on board (not physical line/column)
-# x is the first player or you, o is the second player or computer
+# position of pieces, index by (v,h) lane number on board
+# (not physical line/column)
 POS = {}
 # score of each position, updated when new piece is filled
 SCORE = {}
