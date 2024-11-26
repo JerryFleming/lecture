@@ -13,30 +13,45 @@ socket.setdefaulttimeout(.2)
 # board is h-center aligned and v-top aligned
 # NB: vim position starts with 1, while python with 0
 class Board:
-  _style = 1
-  if _style == 0:
-    # lane separators, ensure first char is corner sep
-    vseg, hseg = '|   ', '+---'
-  elif _style == 1:
-    vseg, hseg = ' . ', '   '
-  elif _style == 2:
-    # if you don't want lane marks
-    vseg, hseg = '    ', '    '
-  # repeat times of horizontal and vertical lanes,
-  # which is the number of pieces allowed in a row/column
-  vrepeat, hrepeat = 0, 0
-  # starting position of viemport for pieces
-  vpos, hpos = 0, 0
-  # each vlane is 2 physical lines (hbar and vbar)
-  vlen, hlen = 2, len(hseg)
-  # horizontal/vertical center position of top left cell
-  # hstart is updated later, vstart is fixed
-  vstart, hstart = vlen // 2, hlen // 2
+  @classmethod
+  def style(cls, num):
+    _style = int(num)
+    if _style == 0:
+      # lane separators, ensure first char is corner sep
+      vseg, hseg = '|   ', '+---'
+    elif _style == 1:
+      vseg, hseg = ' . ', '   '
+    elif _style == 2:
+      # if you don't want lane marks
+      vseg, hseg = '    ', '    '
+    # repeat times of horizontal and vertical lanes,
+    # which is the number of pieces allowed in a row/column
+    vrepeat, hrepeat = 0, 0
+    # starting position of viemport for pieces
+    vpos, hpos = 0, 0
+    # each vlane is 2 physical lines (hbar and vbar)
+    vlen, hlen = 2, len(hseg)
+    # horizontal/vertical center position of top left cell
+    # hstart is updated later, vstart is fixed
+    vstart, hstart = vlen // 2, hlen // 2
+    items = locals()
+    for key, val in items.items():
+      if key == 'cls': continue
+      setattr(cls, key, val)
+    if isinstance(num, str):
+      draw_board()
+Board.style(0)
 class Color:
   # middle of vseg
-  empty = Board.vseg[Board.hlen // 2]
+  Empty = Board.vseg[Board.hlen // 2]
   # X is for you, O is for your opponent (friend or computer)
-  black, white = 'X', 'O'
+  empty, black, white = 0, -1, 1
+  Black, White = 'X', 'O'
+  map = {
+    empty: Empty,
+    black: Black,
+    white: White,
+  }
 class Conn:
   name = None # connection handler
   put = '' # msg to send
@@ -398,7 +413,7 @@ def draw_board(resize=False):
       pos = v + Board.vpos, h + Board.hpos
       if pos not in POS: continue
       vv, hh = physical_pos(v, h)
-      lines[vv-1][hh-1] = POS.get(pos) # python index is 0-based
+      lines[vv-1][hh-1] = Color.map[POS.get(pos)] # python index is 0-based
   update_buffer([''.join(x) for x in lines])
   if resize:
     vv, hh = physical_pos(Board.vrepeat // 2, Board.hrepeat // 2)
@@ -487,6 +502,7 @@ function! Setup()
   command! Play python3 play()
   command! Stop python3 stop_game()
   command! Disconnect python3 stop_conn()
+  command! -nargs=1 Style python3 Board.style(<f-args>)
   command! -nargs=1 Server python3 start_server(<f-args>)
   command! -nargs=1 Client python3 start_client(<f-args>)
   command! -complete=file -bang -nargs=1 Save python3 save_session(<f-args>)
