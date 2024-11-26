@@ -50,6 +50,24 @@ class Status:
 POS = {}
 SCORE = {}
 
+def physical_pos(vpos, hpos):
+  # pysical position is 1-based
+  return [
+    Board.vstart + vpos * Board.vlen + 1,
+    Board.hstart + hpos * Board.hlen + 1,
+  ]
+
+def get_directions(pos):
+  duration = 9 # number of consecutive pieces to look ahead
+  # Patterns on 4 directions: vertical, horizontal, slash, back slash.
+  # This inclues pattersn startig from the give place and that ends there.
+  return [
+    [(pos[0]-4+x, pos[1]) for x in range(duration)], # vertical
+    [(pos[0], pos[1]-4+x) for x in range(duration)], # horzontal
+    [(pos[0]-4+x, pos[1]-4+x) for x in range(duration)], # slash
+    [(pos[0]-4+x, pos[1]+4-x) for x in range(duration)], # back slash
+  ]
+
 def server_loop(action):
   while True:
     server = Conn.name
@@ -185,6 +203,13 @@ def clear_session():
   draw_board()
   print('Session cleared.')
 
+def game_over():
+  draw_board()
+  msg = 'Game over!'
+  message(msg, False)
+  Status.frozen = True
+  stop_conn()
+
 def check_win(pos, side):
   msg = ''
   for direction in get_directions(pos):
@@ -209,6 +234,11 @@ def check_win(pos, side):
       game_over()
       return True
   return False
+
+def clear_message():
+  Status.message = False
+  vim.command('call clearmatches()')
+  vim.command('redraw')
 
 def move_cursor(direction):
   vv, hh, vpos, hpos = getpos()
@@ -249,13 +279,6 @@ def getpos():
   hpos = (hh - 1 - Board.hstart) // Board.hlen
   return vv, hh, vpos, hpos
 
-def game_over():
-  draw_board()
-  msg = 'Game over!'
-  message(msg, False)
-  Status.frozen = True
-  stop_conn()
-
 def auto_move():
   Status.waiting = True
   print('Thinking...')
@@ -285,23 +308,13 @@ def auto_move():
       if pos not in POS: break
   POS[pos] = Color.white
   vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos))
+  update_score()
   draw_board()
   vim.command('redraw')
   ret = check_win(pos, Color.white)
   if not ret:
     print('Your move now.')
   Status.waiting = False
-
-def get_directions(pos):
-  duration = 9 # number of consecutive pieces to look ahead
-  # Patterns on 4 directions: vertical, horizontal, slash, back slash.
-  # This inclues pattersn startig from the give place and that ends there.
-  return [
-    [(pos[0]-4+x, pos[1]) for x in range(duration)], # vertical
-    [(pos[0], pos[1]-4+x) for x in range(duration)], # horzontal
-    [(pos[0]-4+x, pos[1]-4+x) for x in range(duration)], # slash
-    [(pos[0]-4+x, pos[1]+4-x) for x in range(duration)], # back slash
-  ]
 
 def put_piece():
   if Status.frozen:
@@ -315,6 +328,7 @@ def put_piece():
     print('This position is occupied.')
     return
   POS[pos] = Color.black
+  update_score()
   if Conn.name:
     Conn.put = '{},{}'.format(*pos)
   draw_board()
@@ -322,13 +336,6 @@ def put_piece():
   ret = check_win(pos, Color.black)
   if not ret:
     auto_move()
-
-def physical_pos(vpos, hpos):
-  # pysical position is 1-based
-  return [
-    Board.vstart + vpos * Board.vlen + 1,
-    Board.hstart + hpos * Board.hlen + 1,
-  ]
 
 def draw_board(resize=False):
   if Status.message: return
@@ -398,11 +405,6 @@ def update_buffer(lines):
   vim.command('set modifiable')
   vim.current.buffer[:] = lines
   vim.command('set nomodifiable')
-  vim.command('redraw')
-
-def clear_message():
-  Status.message = False
-  vim.command('call clearmatches()')
   vim.command('redraw')
 
 def message(msg, model=True) :
