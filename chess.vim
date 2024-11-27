@@ -13,34 +13,25 @@ socket.setdefaulttimeout(.2)
 # board is h-center aligned and v-top aligned
 # NB: vim position starts with 1, while python with 0
 class Board:
-  @classmethod
-  def style(cls, num):
-    _style = int(num)
-    if _style == 0:
-      # lane separators, ensure first char is corner sep
-      vseg, hseg = '|   ', '+---'
-    elif _style == 1:
-      vseg, hseg = ' . ', '   '
-    elif _style == 2:
-      # if you don't want lane marks
-      vseg, hseg = '    ', '    '
-    # repeat times of horizontal and vertical lanes,
-    # which is the number of pieces allowed in a row/column
-    vrepeat, hrepeat = 0, 0
-    # starting position of viemport for pieces
-    vpos, hpos = 0, 0
-    # each vlane is 2 physical lines (hbar and vbar)
-    vlen, hlen = 2, len(hseg)
-    # horizontal/vertical center position of top left cell
-    # hstart is updated later, vstart is fixed
-    vstart, hstart = vlen // 2, hlen // 2
-    items = locals()
-    for key, val in items.items():
-      if key == 'cls': continue
-      setattr(cls, key, val)
-    if isinstance(num, str):
-      draw_board()
-Board.style(0)
+  _style = 0
+  if _style == 0:
+    # lane separators, ensure first char is corner sep
+    vseg, hseg = '|   ', '+---'
+  elif _style == 1:
+    vseg, hseg = ' . ', '   '
+  elif _style == 2:
+    # if you don't want lane marks
+    vseg, hseg = '    ', '    '
+  # repeat times of horizontal and vertical lanes,
+  # which is the number of pieces allowed in a row/column
+  vrepeat, hrepeat = 0, 0
+  # starting position of viemport for pieces
+  vpos, hpos = 0, 0
+  # each vlane is 2 physical lines (hbar and vbar)
+  vlen, hlen = 2, len(hseg)
+  # horizontal/vertical center position of top left cell
+  # hstart is updated later, vstart is fixed
+  vstart, hstart = vlen // 2, hlen // 2
 class Color:
   # middle of vseg
   Empty = Board.vseg[Board.hlen // 2]
@@ -389,6 +380,22 @@ def put_piece():
   if not ret:
     auto_move()
 
+def style(num):
+  _style = int(num)
+  if _style == 0:
+    vseg, hseg = '|   ', '+---'
+  elif _style == 1:
+    vseg, hseg = ' . ', '   '
+  elif _style == 2:
+    vseg, hseg = '    ', '    '
+  vlen, hlen = 2, len(hseg)
+  vstart, hstart = vlen // 2, hlen // 2
+  items = locals()
+  for key, val in items.items():
+    setattr(Board, key, val)
+  if isinstance(num, str):
+    draw_board()
+
 def draw_board(resize=False):
   if Status.message: return
   Board.hrepeat, remain = divmod(vim.current.window.width, Board.hlen)
@@ -502,7 +509,7 @@ function! Setup()
   command! Play python3 play()
   command! Stop python3 stop_game()
   command! Disconnect python3 stop_conn()
-  command! -nargs=1 Style python3 Board.style(<f-args>)
+  command! -nargs=1 Style python3 style(<f-args>)
   command! -nargs=1 Server python3 start_server(<f-args>)
   command! -nargs=1 Client python3 start_client(<f-args>)
   command! -complete=file -bang -nargs=1 Save python3 save_session(<f-args>)
