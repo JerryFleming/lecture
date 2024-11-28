@@ -374,7 +374,14 @@ def restore_session(fname):
   new = json.loads(open(fname).read())
   POS.clear()
   for k, v in new.items():
-    POS[eval(k)] = Color.map[v]
+    vim.command('call clearmatches()')
+    pos = eval(k)
+    POS[pos] = Color.map[v]
+    draw_board()
+    vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
+    print('Press any char to continue...')
+    vim.command('redraw')
+    char = vim.eval('getcharstr()')
   draw_board()
   print('Reloaded saved session.')
 
@@ -382,7 +389,7 @@ def clear_session():
   message('Are you sure to clear the session? y/N', False)
   print('')
   char = vim.eval('getcharstr()')
-  vim.command( 'redraw')
+  vim.command('redraw')
   if char.lower() != 'y':
     return
   POS.clear()
@@ -553,7 +560,7 @@ def draw_board(resize=False):
       vv, hh = physical_pos(v, h)
       lines[vv-1][hh-1] = Color.map[POS[pos]] # python index is 0-based
   update_buffer([''.join(x) for x in lines])
-  if resize:
+  if resize and POS:
     vv, hh = physical_pos(*list(POS)[0])
     vim.eval('cursor({}, {})'.format(vv, hh))
 
