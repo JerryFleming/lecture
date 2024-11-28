@@ -568,6 +568,7 @@ def play():
   `:Client [host:]port` to start client.
   `:Play` to start game.
   `:Stop` to stop game and do normal editing.
+  `:Style [0|1|2]` to change lane style.
 
   Do you want to move first? y/N
   '''
