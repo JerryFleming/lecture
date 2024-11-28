@@ -59,46 +59,46 @@ WILLWIN = 100000000
 
 class Pattern:
   W = (
-    { 1, 1, 1, 1, 1},
+    ( 1, 1, 1, 1, 1),
   )
   U4 = (
-    { 0, 1, 1, 1, 1, 0},
+    ( 0, 1, 1, 1, 1, 0),
   )
   U3 = (
-    { 0, 1, 1, 1, 0, 0},
-    { 0, 0, 1, 1, 1, 0},
-    { 0, 1, 0, 1, 1, 0},
-    { 0, 1, 1, 0, 1, 0},
+    ( 0, 1, 1, 1, 0, 0),
+    ( 0, 0, 1, 1, 1, 0),
+    ( 0, 1, 0, 1, 1, 0),
+    ( 0, 1, 1, 0, 1, 0),
   )
   U2 = (
-    { 0, 0, 1, 1, 0, 0},
-    { 0, 1, 0, 1, 0, 0},
-    { 0, 0, 1, 0, 1, 0},
-    { 0, 1, 1, 0, 0, 0},
-    { 0, 0, 0, 1, 1, 0},
-    { 0, 1, 0, 0, 1, 0},
+    ( 0, 0, 1, 1, 0, 0),
+    ( 0, 1, 0, 1, 0, 0),
+    ( 0, 0, 1, 0, 1, 0),
+    ( 0, 1, 1, 0, 0, 0),
+    ( 0, 0, 0, 1, 1, 0),
+    ( 0, 1, 0, 0, 1, 0),
   )
   C4 = (
-    {-1, 1, 0, 1, 1, 1},
-    {-1, 1, 1, 0, 1, 1},
-    {-1, 1, 1, 1, 0, 1},
-    {-1, 1, 1, 1, 1, 0},
-    { 0, 1, 1, 1, 1,-1},
-    { 1, 0, 1, 1, 1,-1},
-    { 1, 1, 0, 1, 1,-1},
-    { 1, 1, 1, 0, 1,-1},
+    (-1, 1, 0, 1, 1, 1),
+    (-1, 1, 1, 0, 1, 1),
+    (-1, 1, 1, 1, 0, 1),
+    (-1, 1, 1, 1, 1, 0),
+    ( 0, 1, 1, 1, 1,-1),
+    ( 1, 0, 1, 1, 1,-1),
+    ( 1, 1, 0, 1, 1,-1),
+    ( 1, 1, 1, 0, 1,-1),
   )
   C3 = (
-    {-1, 1, 1, 1, 0, 0},
-    {-1, 1, 1, 0, 1, 0},
-    {-1, 1, 0, 1, 1, 0},
-    { 0, 0, 1, 1, 1,-1},
-    { 0, 1, 0, 1, 1,-1},
-    { 0, 1, 1, 0, 1,-1},
-    {-1, 1, 0, 1, 0, 1,-1},
-    {-1, 0, 1, 1, 1, 0,-1},
-    {-1, 1, 1, 0, 0, 1,-1},
-    {-1, 1, 0, 0, 1, 1,-1},
+    (-1, 1, 1, 1, 0, 0),
+    (-1, 1, 1, 0, 1, 0),
+    (-1, 1, 0, 1, 1, 0),
+    ( 0, 0, 1, 1, 1,-1),
+    ( 0, 1, 0, 1, 1,-1),
+    ( 0, 1, 1, 0, 1,-1),
+    (-1, 1, 0, 1, 0, 1,-1),
+    (-1, 0, 1, 1, 1, 0,-1),
+    (-1, 1, 1, 0, 0, 1,-1),
+    (-1, 1, 0, 0, 1, 1,-1),
   )
   w = u4 = u3 = u2 = c4 = c3 = 0
 
@@ -136,7 +136,7 @@ def score_ptn(ptn):
 def contains(ptns, combo):
   for ptn in ptns:
     neg = [-x for x in ptn]
-    for idx in range(len(combo) - len(ptn)):
+    for idx in range(len(combo) - len(ptn) + 1):
       if ptn == combo[idx:idx+len(ptn)]: return True
       if neg == combo[idx:idx+len(ptn)]: return True
       continue
@@ -145,12 +145,12 @@ def contains(ptns, combo):
 def get_value(*combos):
   ptn = Pattern()
   for combo in combos:
-    if   contains(Pattern.W,  combo): ptn.w  += 1
-    elif contains(Pattern.U4, combo): ptn.u4 += 1
-    elif contains(Pattern.U3, combo): ptn.u3 += 1
-    elif contains(Pattern.C4, combo): ptn.c4 += 1
-    elif contains(Pattern.C3, combo): ptn.c3 += 1
-    elif contains(Pattern.U2, combo): ptn.u2 += 1
+    if   contains(ptn.W,  combo): ptn.w  += 1
+    elif contains(ptn.C4, combo): ptn.c4 += 1
+    elif contains(ptn.C3, combo): ptn.c3 += 1
+    elif contains(ptn.U4, combo): ptn.u4 += 1
+    elif contains(ptn.U3, combo): ptn.u3 += 1
+    elif contains(ptn.U2, combo): ptn.u2 += 1
   return score_ptn(ptn)
 
 def minimax(node, depth, player, pnode):
@@ -162,26 +162,28 @@ def minimax(node, depth, player, pnode):
 
 def find_children(pnode, player):
   ring = 1 # ring size aroung current cell
-  children = {}
+  children = []
+  candidates = set()
   for v, h in list(pnode):
     if not pnode[v,h]: continue
     # upper bound inclusive
     for vv in range(v - ring, v + ring + 1):
       for hh in range(h - ring, h + ring + 1):
         pos = vv, hh
-        if not pnode[pos]: continue
-        if pos in children: continue
+        if pnode[pos]: continue
+        if pos in candidates: continue
+        candidates.add(pos)
         node = pnode.copy()
         node[pos] = -player
-        children[pos] = node
-  return children.values()
+        children.append(node)
+  return children
 
 def get_combo(node, dir1, dir2, player):
   combo = [player]
-  for pos in dir1:
+  for pos in dir1[1:]:
     combo.insert(0, node[pos])
     if node[pos] == -player: break
-  for pos in dir2:
+  for pos in dir2[1:]:
     combo.append(node[pos])
     if node[pos] == -player: break
   return combo
@@ -192,17 +194,17 @@ def heuristic(node, pnode):
     if node[pos] == pnode[pos]: continue
     directions = list(get_directions(pos))
     vplayer = get_value(
-      get_combo(node, directions[0], directions[4], node[pos]),
-      get_combo(node, directions[1], directions[5], node[pos]),
-      get_combo(node, directions[2], directions[6], node[pos]),
-      get_combo(node, directions[3], directions[7], node[pos]),
+      get_combo(node, directions[0], directions[1], node[pos]),
+      get_combo(node, directions[2], directions[3], node[pos]),
+      get_combo(node, directions[4], directions[5], node[pos]),
+      get_combo(node, directions[6], directions[7], node[pos]),
     )
     node[pos] *= -1
     vother = get_value(
-      get_combo(node, directions[0], directions[4], -node[pos]),
-      get_combo(node, directions[1], directions[5], -node[pos]),
-      get_combo(node, directions[2], directions[6], -node[pos]),
-      get_combo(node, directions[3], directions[7], -node[pos]),
+      get_combo(node, directions[0], directions[1], node[pos]),
+      get_combo(node, directions[2], directions[3], node[pos]),
+      get_combo(node, directions[4], directions[5], node[pos]),
+      get_combo(node, directions[6], directions[7], node[pos]),
     )
     node[pos] *= -1
     return 2 * vplayer + vother
@@ -240,14 +242,10 @@ def physical_pos(vpos, hpos):
 #
 def get_directions(pos):
   for direction in [
-    [ 1, 1],
-    [ 1, 0],
-    [ 1, -1],
-    [ 0,-1],
-    [-1,-1],
-    [-1, 0],
-    [-1, 1],
-    [ 0, 1],
+    [-1, 0], [ 1, 0],
+    [ 0,-1], [ 0, 1],
+    [-1,-1], [ 1, 1],
+    [-1, 1], [ 1,-1],
   ]:
     yield [(pos[0]+x*direction[0], pos[1]+x*direction[1]) for x in range(5)]
 
