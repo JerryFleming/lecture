@@ -42,6 +42,9 @@ class Color:
     empty: Empty,
     black: Black,
     white: White,
+    Empty: empty,
+    Black: black,
+    White: white,
   }
 class Conn:
   name = None # connection handler
@@ -361,7 +364,7 @@ def start_client(addr):
   auto_move()
 
 def save_session(fname):
-  new = {'{}:{}'.format(*k):v for k, v in POS.items() if v}
+  new = {str(k):Color.map[v] for k, v in POS.items() if v}
   open (fname, 'w').write(json.dumps(new))
   print('Session saved.')
 
@@ -369,7 +372,7 @@ def restore_session(fname):
   new = json.loads(open(fname).read())
   POS.clear()
   for k, v in new.items():
-    POS[tuple(map(int, k.split(':')))] = v
+    POS[eval(k)] = Color.map[v]
   draw_board()
   print('Reloaded saved session.')
 
