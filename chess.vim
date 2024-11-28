@@ -62,46 +62,46 @@ WILLWIN = 100000000
 
 class Pattern:
   W = (
-    ( 1, 1, 1, 1, 1),
+    [ 1, 1, 1, 1, 1],
   )
   U4 = (
-    ( 0, 1, 1, 1, 1, 0),
+    [ 0, 1, 1, 1, 1, 0],
   )
   U3 = (
-    ( 0, 1, 1, 1, 0, 0),
-    ( 0, 0, 1, 1, 1, 0),
-    ( 0, 1, 0, 1, 1, 0),
-    ( 0, 1, 1, 0, 1, 0),
+    [ 0, 1, 1, 1, 0, 0],
+    [ 0, 0, 1, 1, 1, 0],
+    [ 0, 1, 0, 1, 1, 0],
+    [ 0, 1, 1, 0, 1, 0],
   )
   U2 = (
-    ( 0, 0, 1, 1, 0, 0),
-    ( 0, 1, 0, 1, 0, 0),
-    ( 0, 0, 1, 0, 1, 0),
-    ( 0, 1, 1, 0, 0, 0),
-    ( 0, 0, 0, 1, 1, 0),
-    ( 0, 1, 0, 0, 1, 0),
+    [ 0, 0, 1, 1, 0, 0],
+    [ 0, 1, 0, 1, 0, 0],
+    [ 0, 0, 1, 0, 1, 0],
+    [ 0, 1, 1, 0, 0, 0],
+    [ 0, 0, 0, 1, 1, 0],
+    [ 0, 1, 0, 0, 1, 0],
   )
   C4 = (
-    (-1, 1, 0, 1, 1, 1),
-    (-1, 1, 1, 0, 1, 1),
-    (-1, 1, 1, 1, 0, 1),
-    (-1, 1, 1, 1, 1, 0),
-    ( 0, 1, 1, 1, 1,-1),
-    ( 1, 0, 1, 1, 1,-1),
-    ( 1, 1, 0, 1, 1,-1),
-    ( 1, 1, 1, 0, 1,-1),
+    [-1, 1, 0, 1, 1, 1],
+    [-1, 1, 1, 0, 1, 1],
+    [-1, 1, 1, 1, 0, 1],
+    [-1, 1, 1, 1, 1, 0],
+    [ 0, 1, 1, 1, 1,-1],
+    [ 1, 0, 1, 1, 1,-1],
+    [ 1, 1, 0, 1, 1,-1],
+    [ 1, 1, 1, 0, 1,-1],
   )
   C3 = (
-    (-1, 1, 1, 1, 0, 0),
-    (-1, 1, 1, 0, 1, 0),
-    (-1, 1, 0, 1, 1, 0),
-    ( 0, 0, 1, 1, 1,-1),
-    ( 0, 1, 0, 1, 1,-1),
-    ( 0, 1, 1, 0, 1,-1),
-    (-1, 1, 0, 1, 0, 1,-1),
-    (-1, 0, 1, 1, 1, 0,-1),
-    (-1, 1, 1, 0, 0, 1,-1),
-    (-1, 1, 0, 0, 1, 1,-1),
+    [-1, 1, 1, 1, 0, 0],
+    [-1, 1, 1, 0, 1, 0],
+    [-1, 1, 0, 1, 1, 0],
+    [ 0, 0, 1, 1, 1,-1],
+    [ 0, 1, 0, 1, 1,-1],
+    [ 0, 1, 1, 0, 1,-1],
+    [-1, 1, 0, 1, 0, 1,-1],
+    [-1, 0, 1, 1, 1, 0,-1],
+    [-1, 1, 1, 0, 0, 1,-1],
+    [-1, 1, 0, 0, 1, 1,-1],
   )
   w = u4 = u3 = u2 = c4 = c3 = 0
 
@@ -142,7 +142,6 @@ def contains(ptns, combo):
     for idx in range(len(combo) - len(ptn) + 1):
       if ptn == combo[idx:idx+len(ptn)]: return True
       if neg == combo[idx:idx+len(ptn)]: return True
-      continue
   return False
 
 def get_value(*combos):
@@ -226,7 +225,10 @@ def find_move(player):
     if max_child[pos] == POS[pos]: continue
     return pos
 
-def physical_pos(vpos, hpos):
+def physical_pos(vpos, hpos, absolute=False):
+  if absolute:
+    vpos -= Board.vpos
+    hpos -= Board.hpos
   # pysical position is 1-based
   return [
     Board.vstart + vpos * Board.vlen + 1,
@@ -399,7 +401,7 @@ def check_win(pos, side):
   for direction in get_directions(pos):
     if any(POS[x]!=side for x in direction): continue
     msg = 'You win!' if side == Color.black else 'You lose!'
-    marks = [physical_pos(vpos, hpos) for vpos, hpos in direction]
+    marks = [physical_pos(vpos, hpos, True) for vpos, hpos in direction]
     vim.command('call matchaddpos("WarningMsg", %s)' % marks)
     break
   if msg:
@@ -481,7 +483,7 @@ def auto_move():
   else:
     pos = find_move(Color.black)
   POS[pos] = Color.white
-  vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos))
+  vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
   draw_board()
   vim.command('redraw')
   ret = check_win(pos, Color.white)
@@ -552,7 +554,7 @@ def draw_board(resize=False):
       lines[vv-1][hh-1] = Color.map[POS[pos]] # python index is 0-based
   update_buffer([''.join(x) for x in lines])
   if resize:
-    vv, hh = physical_pos(Board.vrepeat // 2, Board.hrepeat // 2)
+    vv, hh = physical_pos(*list(POS)[0])
     vim.eval('cursor({}, {})'.format(vv, hh))
 
 def play():
