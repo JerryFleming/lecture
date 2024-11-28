@@ -1,11 +1,11 @@
 python3 << EOL
 import math
 import json
-import random
 import socket
 import time
 import textwrap
 import vim
+from collections import defaultdict
 from threading import Thread, Timer
 
 socket.setdefaulttimeout(.2)
@@ -53,36 +53,173 @@ class Status:
   message = False # a msg is displayed (no clear until timeout)
 # position of pieces, index by (v,h) lane number on board
 # (not physical line/column)
-POS = {}
-SCORE = {}
+POS = defaultdict(int)
 
-def find_score(pos):
+WILLWIN = 100000000
+
+class Pattern:
+  W = (
+    { 1, 1, 1, 1, 1},
+  )
+  U4 = (
+    { 0, 1, 1, 1, 1, 0},
+  )
+  U3 = (
+    { 0, 1, 1, 1, 0, 0},
+    { 0, 0, 1, 1, 1, 0},
+    { 0, 1, 0, 1, 1, 0},
+    { 0, 1, 1, 0, 1, 0},
+  )
+  U2 = (
+    { 0, 0, 1, 1, 0, 0},
+    { 0, 1, 0, 1, 0, 0},
+    { 0, 0, 1, 0, 1, 0},
+    { 0, 1, 1, 0, 0, 0},
+    { 0, 0, 0, 1, 1, 0},
+    { 0, 1, 0, 0, 1, 0},
+  )
+  C4 = (
+    {-1, 1, 0, 1, 1, 1},
+    {-1, 1, 1, 0, 1, 1},
+    {-1, 1, 1, 1, 0, 1},
+    {-1, 1, 1, 1, 1, 0},
+    { 0, 1, 1, 1, 1,-1},
+    { 1, 0, 1, 1, 1,-1},
+    { 1, 1, 0, 1, 1,-1},
+    { 1, 1, 1, 0, 1,-1},
+  )
+  C3 = (
+    {-1, 1, 1, 1, 0, 0},
+    {-1, 1, 1, 0, 1, 0},
+    {-1, 1, 0, 1, 1, 0},
+    { 0, 0, 1, 1, 1,-1},
+    { 0, 1, 0, 1, 1,-1},
+    { 0, 1, 1, 0, 1,-1},
+    {-1, 1, 0, 1, 0, 1,-1},
+    {-1, 0, 1, 1, 1, 0,-1},
+    {-1, 1, 1, 0, 0, 1,-1},
+    {-1, 1, 0, 0, 1, 1,-1},
+  )
+  w = u4 = u3 = u2 = c4 = c3 = 0
+
+def score_ptn(ptn):
+  if ptn.w: return WILLWIN * 10
+  elif ptn.u4: return WILLWIN
+  elif ptn.c4 > 1: return WILLWIN / 10
+  elif ptn.u3 > 0 and ptn.c4: return WILLWIN / 100
+  elif ptn.u3 > 1: return WILLWIN / 1000
+  elif ptn.u3 == 1:
+    if ptn.u2 == 3: return 40000
+    elif ptn.u2 == 2: return 38000
+    elif ptn.u2 == 1: return 35000
+    else: return 3450
+  elif ptn.c4 == 1:
+    if ptn.u2 == 3: return 4500
+    elif ptn.u2 == 2: return 4200
+    elif ptn.u2 == 1: return 4100
+    else: return 4050
+  elif ptn.c3 == 3:
+    if ptn.u2 == 1: return 2800
+  elif ptn.c3 == 2:
+    if ptn.u2 == 2: return 3000
+    elif ptn.u2 == 1: return 2900
+  if ptn.c3 == 1:
+    if ptn.u2 == 3: return 3400
+    elif ptn.u2 == 2: return 3300
+    elif ptn.u2 == 1: return 3100
+  elif ptn.u2 == 4: return 2700
+  elif ptn.u2 == 3: return 2500
+  elif ptn.u2 == 2: return 2000
+  elif ptn.u2 == 1: return 1000
+  return 0
+
+def contains(ptns, combo):
+  for ptn in ptns:
+    neg = [-x for x in ptn]
+    for idx in range(len(combo) - len(ptn)):
+      if ptn == combo[idx:idx+len(ptn)]: return True
+      if neg == combo[idx:idx+len(ptn)]: return True
+      continue
+  return False
+
+def get_value(*combos):
   ptn = Pattern()
-  score = 0
-  for direction in get_directions(pos):
-    for start in range(4, -1, -1):
-      cur = POS.get(direction[start])
-      ret.insert(0, cur)
-      if cur == other: break
-    for start in range(5, 10):
-      cur = POS.get(direction[start])
-      ret.push(cur)
-      if cur == other: break
-    if contains(Pattern.W,  ret):  ptn.w  += 1
-    if contains(Pattern.U4, ret): ptn.u4 += 1
-    if contains(Pattern.U3, ret): ptn.u3 += 1
-    if contains(Pattern.C4, ret): ptn.c4 += 1
-    if contains(Pattern.C3, ret): ptn.c3 += 1
-    if contains(Pattern.U2, ret): ptn.u2 += 1
+  for combo in combos:
+    if   contains(Pattern.W,  combo): ptn.w  += 1
+    elif contains(Pattern.U4, combo): ptn.u4 += 1
+    elif contains(Pattern.U3, combo): ptn.u3 += 1
+    elif contains(Pattern.C4, combo): ptn.c4 += 1
+    elif contains(Pattern.C3, combo): ptn.c3 += 1
+    elif contains(Pattern.U2, combo): ptn.u2 += 1
   return score_ptn(ptn)
 
-def update_score(pos, color):
-  return
-  for rnd, direction in enumerate(get_directions(pos)):
-    for idx, item in enumerate(direction):
-      # for central point, should do it only once
-      if rnd and idx == 4: continue
-      SCORE[item] = find_score(item)
+def minimax(node, depth, player, pnode):
+  if depth == 0: return heuristic(node, pnode)
+  alpha = -math.inf
+  for child in find_children(node, player):
+    alpha = max(alpha, -minimax(child, depth - 1, -player, node))
+  return alpha
+
+def find_children(pnode, player):
+  ring = 1 # ring size aroung current cell
+  children = {}
+  for v, h in list(pnode):
+    if not pnode[v,h]: continue
+    # upper bound inclusive
+    for vv in range(v - ring, v + ring + 1):
+      for hh in range(h - ring, h + ring + 1):
+        pos = vv, hh
+        if not pnode[pos]: continue
+        if pos in children: continue
+        node = pnode.copy()
+        node[pos] = -player
+        children[pos] = node
+  return children.values()
+
+def get_combo(node, dir1, dir2, player):
+  combo = [player]
+  for pos in dir1:
+    combo.insert(0, node[pos])
+    if node[pos] == -player: break
+  for pos in dir2:
+    combo.append(node[pos])
+    if node[pos] == -player: break
+  return combo
+
+def heuristic(node, pnode):
+  for pos in node | pnode:
+    # check pos on both sides
+    if node[pos] == pnode[pos]: continue
+    directions = list(get_directions(pos))
+    vplayer = get_value(
+      get_combo(node, directions[0], directions[4], node[pos]),
+      get_combo(node, directions[1], directions[5], node[pos]),
+      get_combo(node, directions[2], directions[6], node[pos]),
+      get_combo(node, directions[3], directions[7], node[pos]),
+    )
+    node[pos] *= -1
+    vother = get_value(
+      get_combo(node, directions[0], directions[4], -node[pos]),
+      get_combo(node, directions[1], directions[5], -node[pos]),
+      get_combo(node, directions[2], directions[6], -node[pos]),
+      get_combo(node, directions[3], directions[7], -node[pos]),
+    )
+    node[pos] *= -1
+    return 2 * vplayer + vother
+  return 0
+
+def find_move(player):
+  max_child = None
+  maxv = -math.inf
+  children = find_children(POS, player) # put_piece
+  for child in children:
+    val = minimax(child, 0, -player, POS)
+    if maxv >= val: continue
+    maxv = val
+    max_child = child
+  for pos in max_child:
+    if max_child[pos] == POS[pos]: continue
+    return pos
 
 def physical_pos(vpos, hpos):
   # pysical position is 1-based
@@ -226,9 +363,9 @@ def start_client(addr):
   auto_move()
 
 def save_session(fname):
-  new = {'{}:{}'.format(*k):v for k, v in POS.items()}
+  new = {'{}:{}'.format(*k):v for k, v in POS.items() if v}
   open (fname, 'w').write(json.dumps(new))
-  print('Session saved')
+  print('Session saved.')
 
 def restore_session(fname):
   new = json.loads(open(fname).read())
@@ -259,7 +396,7 @@ def game_over():
 def check_win(pos, side):
   msg = ''
   for direction in get_directions(pos):
-    if any(POS.get(x, Color.empty)!=side for x in direction): continue
+    if any(POS[x]!=side for x in direction): continue
     msg = 'You win!' if side == Color.black else 'You lose!'
     marks = [physical_pos(vpos, hpos) for vpos, hpos in direction]
     vim.command('call matchaddpos("WarningMsg", %s)' % marks)
@@ -341,15 +478,7 @@ def auto_move():
   if not POS:
     pos = Board.vrepeat // 2, Board.hrepeat // 2
   else:
-    for item in SCORE:
-      if SCORE[item] != max(SCORE.values()): continue
-      pos = item
-      break
-    #update_score(pos, Color.white)
-  if not pos:
-    while True:
-      pos = random.randint(0, Board.vrepeat), random.randint(0, Board.hrepeat)
-      if pos not in POS: break
+    pos = find_move(Color.black)
   POS[pos] = Color.white
   vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos))
   draw_board()
@@ -367,11 +496,10 @@ def put_piece():
     return
   _, _, vpos, hpos = get_pos()
   pos = vpos + Board.vpos, hpos + Board.hpos
-  if pos in POS:
+  if POS[pos]:
     print('This position is occupied.')
     return
   POS[pos] = Color.black
-  update_score(pos, Color.black)
   if Conn.name:
     Conn.put = '{},{}'.format(*pos)
   draw_board()
@@ -420,7 +548,7 @@ def draw_board(resize=False):
       pos = v + Board.vpos, h + Board.hpos
       if pos not in POS: continue
       vv, hh = physical_pos(v, h)
-      lines[vv-1][hh-1] = Color.map[POS.get(pos)] # python index is 0-based
+      lines[vv-1][hh-1] = Color.map[POS[pos]] # python index is 0-based
   update_buffer([''.join(x) for x in lines])
   if resize:
     vv, hh = physical_pos(Board.vrepeat // 2, Board.hrepeat // 2)
