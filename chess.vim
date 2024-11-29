@@ -35,7 +35,7 @@ class Board:
 class Color:
   # middle of vseg
   Empty = Board.vseg[Board.hlen // 2]
-  # X is for you, O is for your opponent (friend or computer)
+  # X/-1 is for you, O/1 is for your opponent (friend or computer)
   empty, black, white = 0, -1, 1
   Black, White = 'X', 'O'
   map = {
@@ -321,8 +321,9 @@ def stop_conn(over=False):
     Conn.name.send('close'.encode())
   except Exception:
     pass
+  Conn.name = None
   if not over:
-    Conn.name = None
+    Conn.server = None
 
 def start_server(port):
   port = int(port)
@@ -404,7 +405,7 @@ def game_over():
   msg = 'Game over!'
   message(msg, False)
   Status.frozen = True
-  stop_conn(True)
+  stop_conn(over=True)
 
 def check_win(pos, side):
   msg = ''
@@ -493,9 +494,7 @@ def auto_move():
     vim.command('redraw')
     game_over()
     return True
-  if not POS:
-    pos = Board.vrepeat // 2, Board.hrepeat // 2
-  else:
+  if not pos:
     pos = find_move(Color.black)
   POS[pos] = Color.white
   vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
