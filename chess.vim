@@ -264,6 +264,8 @@ def server_loop(action):
         client, address = server.accept()
         POS.clear()
         draw_board()
+        Status.frozen = False
+        Status.message = False
         Conn.got = ''
         Conn.name = client
         print(f'Accepted connection from {address}. Your move now.')
@@ -476,7 +478,7 @@ def get_pos():
 def auto_move():
   Status.waiting = True
   print('Thinking...')
-  pos = msg = None
+  pos, msg = None, ''
   if Conn.name:
     while not Conn.got:
       if not Conn.name: break # client disconnected
@@ -590,6 +592,8 @@ def play():
   if Status.frozen:
     vim.command('call Setup()')
     Status.frozen = False
+    Status.waiting = False
+    Status.message = False
     draw_board(resize=True)
     POS.clear()
     draw_board()
