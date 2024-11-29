@@ -50,6 +50,7 @@ class Conn:
   name = None # connection handler
   put = '' # msg to send
   got = '' # msg received
+  server = None
 class Status:
   waiting = False # waiting for computer/friend
   frozen = False # game over etc
@@ -168,7 +169,7 @@ def find_children(pnode, player):
   candidates = set()
   for v, h in list(pnode):
     if not pnode[v,h]: continue
-    # upper bound inclusive
+    # lower/upper bound inclusive
     for vv in range(v - ring, v + ring + 1):
       for hh in range(h - ring, h + ring + 1):
         pos = vv, hh
@@ -261,7 +262,6 @@ def server_loop(action):
     if action == 'receive':
       try:
         client, address = server.accept()
-        server.close()
         POS.clear()
         draw_board()
         Conn.got = ''
@@ -277,6 +277,7 @@ def server_loop(action):
     if not client: continue
     msg = 'Connection to client closed.' if action == 'receive' else ''
     client_loop(action, msg)
+    Conn.name = Conn.server
 
 def client_loop(action, msg):
   while True:
@@ -315,12 +316,13 @@ def client_loop(action, msg):
     print(msg)
     message(msg, False)
 
-def stop_conn():
+def stop_conn(over=False):
   try:
     Conn.name.send('close'.encode())
   except Exception:
     pass
-  Conn.name = None
+  if not over:
+    Conn.name = None
 
 def start_server(port):
   port = int(port)
@@ -329,6 +331,7 @@ def start_server(port):
     return
   try:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     host = socket.gethostname()
     server.bind((host, port))
     server.listen(0)
@@ -336,7 +339,7 @@ def start_server(port):
   except Exception as err:
     print(f'Failed to start server on {host}:{port} with error: {err}')
     return
-  Conn.name = server
+  Conn.name = Conn.server = server
   Thread(target=server_loop, args=['send']).start()
   Thread(target=server_loop, args=['receive']).start()
   # should not auto_move() here as connection is not established yet
@@ -352,6 +355,7 @@ def start_client(addr):
     port = addr
   port = int(port)
   client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
   try:
     client.connect((host, port))
     print(f'Connected to {host}:{port}')
@@ -387,7 +391,6 @@ def restore_session(fname):
 
 def clear_session():
   message('Are you sure to clear the session? y/N', False)
-  print('')
   char = vim.eval('getcharstr()')
   vim.command('redraw')
   if char.lower() != 'y':
@@ -401,7 +404,7 @@ def game_over():
   msg = 'Game over!'
   message(msg, False)
   Status.frozen = True
-  stop_conn()
+  stop_conn(True)
 
 def check_win(pos, side):
   msg = ''
@@ -415,13 +418,13 @@ def check_win(pos, side):
     msg += '\nDo you want to play again? y/N'
     message(msg, False)
     vim.command('redraw')
-    print('')
     char = vim.eval('getcharstr()')
     if char.lower() == 'y':
       POS.clear()
       draw_board()
     else:
       game_over()
+      print('Chicken!')
       return True
   return False
 
@@ -472,15 +475,20 @@ def get_pos():
 def auto_move():
   Status.waiting = True
   print('Thinking...')
-  pos = None
+  pos = msg = None
   if Conn.name:
     while not Conn.got:
-      if not Conn.name: break
+      if not Conn.name: break # client disconnected
+      if Conn.name == Conn.server: break # server disconnected
       time.sleep(.1)
     if ',' in Conn.got:
-      vv, hh = Conn.got.split(',')
+      vv, hh, vpos, hpos = eval(Conn.got)
+      if vpos or hpos:
+        msg = f'Board moved to: {vpos} {hpos}'
+        print(msg)
+        Board.vpos, Board.hpos = vpos, hpos
       Conn.got = ''
-      pos = int(vv), int(hh)
+      pos = vv, hh
   if Conn.name and Conn.got == 'close':
     vim.command('redraw')
     game_over()
@@ -495,7 +503,8 @@ def auto_move():
   vim.command('redraw')
   ret = check_win(pos, Color.white)
   if not ret:
-    print('Your move now.')
+    if msg: msg = f'[{msg}] '
+    print(f'{msg}Your move now.')
   Status.waiting = False
 
 def put_piece():
@@ -511,7 +520,7 @@ def put_piece():
     return
   POS[pos] = Color.black
   if Conn.name:
-    Conn.put = '{},{}'.format(*pos)
+    Conn.put = str([*pos, Board.vpos, Board.hpos])
   draw_board()
   vim.command('redraw')
   ret = check_win(pos, Color.black)
@@ -588,7 +597,6 @@ def play():
     return
   else:
     message(msg, model=True)
-  print('')
   char = vim.eval('getcharstr()')
   draw_board() # do this so we have vrepeat/hrepeat
   vim.command('redraw')
@@ -653,9 +661,9 @@ function! Setup()
   command! -nargs=1 Client python3 start_client(<f-args>)
   command! -complete=file -bang -nargs=1 Save python3 save_session(<f-args>)
   command! -complete=file -bang -nargs=1 Restore python3 restore_session(<f-args>)
-  "cc-u>: this clears out the line range that will be added when you start a command with a number.
+  "<c-u>: this clears out the line range that will be added when you start a command with a number.
   "norm! The ! after :norm ensures we don't use remapped commands.
-  "nnoremap ‹silent> j :<c-u»norm! 2j<cr»
+  "nnoremap <silent> j :<c-u>norm! 2j<cr>
   nnoremap <silent> j :python3 move_cursor("j")<cr>
   nnoremap <silent> k :python3 move_cursor("k")<cr>
   nnoremap <silent> h :python3 move_cursor("h")<cr>
