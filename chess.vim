@@ -621,6 +621,7 @@ def update_buffer(lines):
   vim.current.buffer[:] = lines
   vim.command('set nomodifiable')
   vim.command('redraw')
+  vim.command('set nomodified')
 
 def message(msg, model=True) :
   if not model:
