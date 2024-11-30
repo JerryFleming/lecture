@@ -381,18 +381,23 @@ def save_session(fname, bang):
   open (fname, 'w').write(json.dumps(new))
   print(f'Session saved at {fname}.')
 
-def restore_session(fname):
+def restore_session(fname, bang):
   new = json.loads(open(fname).read())
   POS.clear()
-  for k, v in new.items():
-    vim.command('call clearmatches()')
-    pos = eval(k)
-    POS[pos] = Color.map[v]
-    draw_board()
-    vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
-    print('Press any char to continue...')
-    vim.command('redraw')
-    char = vim.eval('getcharstr()')
+  if bang:
+    for k, v in new.items():
+      pos = eval(k)
+      POS[pos] = Color.map[v]
+  else:
+    for k, v in new.items():
+      vim.command('call clearmatches()')
+      pos = eval(k)
+      POS[pos] = Color.map[v]
+      draw_board()
+      vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
+      print('Press any char to continue...')
+      vim.command('redraw')
+      char = vim.eval('getcharstr()')
   draw_board()
   print(f'Reloaded saved session from {fname}.')
 
@@ -611,6 +616,7 @@ def play():
     draw_board()
     return
   else:
+    POS.clear()
     message(msg, model=True)
   char = vim.eval('getcharstr()')
   draw_board() # do this so we have vrepeat/hrepeat
@@ -676,7 +682,7 @@ function! Setup()
   command! -nargs=1 Server python3 start_server(<f-args>)
   command! -nargs=1 Client python3 start_client(<f-args>)
   command! -complete=file -bang -nargs=1 Save python3 save_session(<f-args>, "<bang>")
-  command! -complete=file -bang -nargs=1 Restore python3 restore_session(<f-args>)
+  command! -complete=file -bang -nargs=1 Restore python3 restore_session(<f-args>, "<bang>")
   "<c-u>: this clears out the line range that will be added when you start a command with a number.
   "norm! The ! after :norm ensures we don't use remapped commands.
   "nnoremap <silent> j :<c-u>norm! 2j<cr>
