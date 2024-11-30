@@ -1,4 +1,5 @@
 python3 << EOL
+import os.path
 import math
 import json
 import socket
@@ -372,10 +373,13 @@ def start_client(addr):
   Thread(target=client_loop, args=['receive', '']).start()
   auto_move()
 
-def save_session(fname):
+def save_session(fname, bang):
   new = {str(k):Color.map[v] for k, v in POS.items() if v}
+  if os.path.exists(fname) and not bang:
+    print(f'File already exists. Use `Save! {fname}` to overwrite.')
+    return
   open (fname, 'w').write(json.dumps(new))
-  print('Session saved.')
+  print(f'Session saved at {fname}.')
 
 def restore_session(fname):
   new = json.loads(open(fname).read())
@@ -390,7 +394,7 @@ def restore_session(fname):
     vim.command('redraw')
     char = vim.eval('getcharstr()')
   draw_board()
-  print('Reloaded saved session.')
+  print(f'Reloaded saved session from {fname}.')
 
 def clear_session():
   message('Are you sure to clear the session? y/N', False)
@@ -504,6 +508,7 @@ def auto_move():
     return True
   if not pos:
     pos = find_move(Color.black)
+  del POS[pos] # to reserve insertion order in defaultdict
   POS[pos] = Color.white
   vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
   draw_board()
@@ -525,6 +530,7 @@ def put_piece():
   if POS[pos]:
     print('This position is occupied.')
     return
+  del POS[pos] # to reserve insertion order in defaultdict
   POS[pos] = Color.black
   if Conn.name:
     Conn.put = str([*pos, Board.vpos, Board.hpos])
@@ -669,7 +675,7 @@ function! Setup()
   command! -nargs=1 Style python3 style(<f-args>)
   command! -nargs=1 Server python3 start_server(<f-args>)
   command! -nargs=1 Client python3 start_client(<f-args>)
-  command! -complete=file -bang -nargs=1 Save python3 save_session(<f-args>)
+  command! -complete=file -bang -nargs=1 Save python3 save_session(<f-args>, "<bang>")
   command! -complete=file -bang -nargs=1 Restore python3 restore_session(<f-args>)
   "<c-u>: this clears out the line range that will be added when you start a command with a number.
   "norm! The ! after :norm ensures we don't use remapped commands.
