@@ -438,27 +438,28 @@ def clear_message():
 
 def move_cursor(direction):
   vv, hh, vpos, hpos = get_pos()
+  cnt = vim.vvars['count1']
   pieces = 5 # there are 5 pieces in a row/column to win
   if direction == 'j':
     if vpos >= Board.vrepeat - pieces:
-      Board.vpos += 1
+      Board.vpos += cnt
     else:
-      vpos += 1
+      vpos += cnt
   elif direction == 'k':
     if vpos <= pieces:
-      Board.vpos -= 1
+      Board.vpos -= cnt
     else:
-      vpos -= 1
+      vpos -= cnt
   elif direction == 'h':
     if hpos <= pieces:
-      Board.hpos -= 1
+      Board.hpos -= cnt
     else:
-      hpos -= 1
+      hpos -= cnt
   elif direction == 'l':
     if hpos >= Board.hrepeat - pieces:
-      Board.hpos += 1
+      Board.hpos += cnt
     else:
-      hpos += 1
+      hpos += cnt
   vpos = min(max(vpos, pieces), Board.vrepeat - pieces)
   hpos = min(max(hpos, pieces), Board.hrepeat - pieces)
   vv, hh = physical_pos(vpos, hpos)
