@@ -460,6 +460,11 @@ def move_cursor(direction):
       Board.hpos += cnt
     else:
       hpos += cnt
+  elif direction == 'm':
+    dic = vim.eval('getmousepos()')
+    vpos, hpos = int(dic['line']), int(dic['column'])
+    vpos = (vpos - Board.vstart) // Board.vlen
+    hpos = (hpos - Board.hstart) // Board.hlen
   vpos = min(max(vpos, pieces), Board.vrepeat - pieces)
   hpos = min(max(hpos, pieces), Board.hrepeat - pieces)
   vv, hh = physical_pos(vpos, hpos)
@@ -672,6 +677,7 @@ function! Setup()
   nnoremap <silent> k :python3 move_cursor("k")<cr>
   nnoremap <silent> h :python3 move_cursor("h")<cr>
   nnoremap <silent> l :python3 move_cursor("l")<cr>
+  nnoremap <LeftMouse> :python3 move_cursor("m")<cr>
   nnoremap <silent> x :python3 put_piece()<cr>
   nnoremap <silent> c :python3 clear_session()<cr>
   autocmd VimResized * python3 draw_board(True)
@@ -680,7 +686,7 @@ function! Setup()
   set ch=1
   set nofoldenable
   set nomodifiable
-  set mouse=
+  set mouse=a
 endfunction
 
 call Setup()
