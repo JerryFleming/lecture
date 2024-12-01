@@ -1,4 +1,4 @@
-python3 << EOL
+py3 << EOL
 import os.path
 import math
 import json
@@ -60,6 +60,11 @@ class Status:
 # (not physical line/column)
 POS = defaultdict(int)
 
+################### AI algorhythm [[[ ##########################################
+# Below is for alpha-beta pruning
+# https://en.wikipedia.org/wiki/Alpha–beta_pruning
+# https://codepen.io/mudrenok/pen/gpMXgg
+#
 WILLWIN = 100000000
 
 class Pattern:
@@ -226,6 +231,7 @@ def find_move(player):
   for pos in max_child:
     if max_child[pos] == POS[pos]: continue
     return pos
+################### ]]] AI algorhythm ##########################################
 
 def physical_pos(vpos, hpos, absolute=False):
   if absolute:
@@ -378,7 +384,7 @@ def save_session(fname, bang):
   if os.path.exists(fname) and not bang:
     print(f'File already exists. Use `Save! {fname}` to overwrite.')
     return
-  open (fname, 'w').write(json.dumps(new))
+  open(fname, 'w').write(json.dumps(new, indent=2))
   print(f'Session saved at {fname}.')
 
 def restore_session(fname, bang):
@@ -390,11 +396,11 @@ def restore_session(fname, bang):
       POS[pos] = Color.map[v]
   else:
     for k, v in new.items():
-      vim.command('call clearmatches()')
+      vim.eval('clearmatches()')
       pos = eval(k)
       POS[pos] = Color.map[v]
       draw_board()
-      vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
+      vim.eval('matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
       print('Press any char to continue...')
       vim.command('redraw')
       char = vim.eval('getcharstr()')
@@ -409,6 +415,7 @@ def clear_session():
     return
   POS.clear()
   draw_board()
+  vim.command('redraw')
   print('Session cleared.')
 
 def game_over():
@@ -424,7 +431,7 @@ def check_win(pos, side):
     if any(POS[x]!=side for x in direction): continue
     msg = 'You win!' if side == Color.black else 'You lose!'
     marks = [physical_pos(vpos, hpos, True) for vpos, hpos in direction]
-    vim.command('call matchaddpos("WarningMsg", %s)' % marks)
+    vim.eval('matchaddpos("WarningMsg", %s)' % marks)
     break
   if msg:
     msg += '\nDo you want to play again? y/N'
@@ -442,7 +449,7 @@ def check_win(pos, side):
 
 def clear_message():
   Status.message = False
-  vim.command('call clearmatches()')
+  vim.eval('clearmatches()')
   vim.command('redraw')
 
 def move_cursor(direction):
@@ -515,7 +522,8 @@ def auto_move():
     pos = find_move(Color.black)
   del POS[pos] # to reserve insertion order in defaultdict
   POS[pos] = Color.white
-  vim.command('call matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
+  vim.eval('clearmatches()')
+  vim.eval('matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
   draw_board()
   vim.command('redraw')
   ret = check_win(pos, Color.white)
@@ -532,6 +540,8 @@ def put_piece():
     return
   _, _, vpos, hpos = get_pos()
   pos = vpos + Board.vpos, hpos + Board.hpos
+  # for computer against computer
+  #pos = find_move(Color.white)
   if POS[pos]:
     print('This position is occupied.')
     return
@@ -594,7 +604,7 @@ def draw_board(resize=False):
 def play():
   msg = '''
   Gomoku
-  You can play with computer directly or with your friend by using the following commands:
+  You can play with computer or your friend by using the following commands:
     j/k/h/l to move, x to put a piece, c to clear, z to position cursor
   `:Save fname` to save the current session.
   `:Resotre fname` to restore the saved session.
@@ -607,7 +617,7 @@ def play():
   Do you want to move first? y/N
   '''
   if Status.frozen:
-    vim.command('call Setup()')
+    vim.eval('Setup()')
     Status.frozen = False
     Status.waiting = False
     Status.message = False
@@ -646,7 +656,8 @@ def message(msg, model=True) :
     width = block * Board.hlen
   gap = '|  {}  |'.format(' ' * width)
   sep = '+--{}--+'.format('-' * width)
-  msg = [sep, gap] + ['|  {}  |'.format(x.ljust(width)) for x in msg] + [gap, sep]
+  msg = [sep, gap] + ['|  {}  |'.format(x.ljust(width))
+    for x in msg] + [gap, sep]
   vpad = (vim.current.window.height - len(msg)) // 2
   if model:
     vrest = vim.current.window.height - len(msg) - vpad
@@ -675,25 +686,27 @@ def stop_game():
 EOL
 
 function! Setup()
-  command! Play python3 play()
-  command! Stop python3 stop_game()
-  command! Disconnect python3 stop_conn()
-  command! -nargs=1 Style python3 style(<f-args>)
-  command! -nargs=1 Server python3 start_server(<f-args>)
-  command! -nargs=1 Client python3 start_client(<f-args>)
-  command! -complete=file -bang -nargs=1 Save python3 save_session(<f-args>, "<bang>")
-  command! -complete=file -bang -nargs=1 Restore python3 restore_session(<f-args>, "<bang>")
-  "<c-u>: this clears out the line range that will be added when you start a command with a number.
+  command! Play py3 play()
+  command! Stop py3 stop_game()
+  command! Disconnect py3 stop_conn()
+  command! -nargs=1 Style py3 style(<f-args>)
+  command! -nargs=1 Server py3 start_server(<f-args>)
+  command! -nargs=1 Client py3 start_client(<f-args>)
+  command! -complete=file -bang -nargs=1 Save
+    \ py3 save_session(<f-args>, "<bang>")
+  command! -complete=file -bang -nargs=1 Restore
+    \ py3 restore_session(<f-args>, "<bang>")
+  "<c-u>: this clears out the line range for a command with a number.
   "norm! The ! after :norm ensures we don't use remapped commands.
   "nnoremap <silent> j :<c-u>norm! 2j<cr>
-  nnoremap <silent> j :python3 move_cursor("j")<cr>
-  nnoremap <silent> k :python3 move_cursor("k")<cr>
-  nnoremap <silent> h :python3 move_cursor("h")<cr>
-  nnoremap <silent> l :python3 move_cursor("l")<cr>
-  nnoremap <LeftMouse> :python3 move_cursor("m")<cr>
-  nnoremap <silent> x :python3 put_piece()<cr>
-  nnoremap <silent> c :python3 clear_session()<cr>
-  autocmd VimResized * python3 draw_board(True)
+  nnoremap <silent> j :py3 move_cursor("j")<cr>
+  nnoremap <silent> k :py3 move_cursor("k")<cr>
+  nnoremap <silent> h :py3 move_cursor("h")<cr>
+  nnoremap <silent> l :py3 move_cursor("l")<cr>
+  nnoremap <LeftMouse> :py3 move_cursor("m")<cr>
+  nnoremap <silent> x :py3 put_piece()<cr>
+  nnoremap <silent> c :py3 clear_session()<cr>
+  autocmd VimResized * py3 draw_board(True)
   autocmd QuitPre * Disconnect
   set nonumber
   set ch=1
