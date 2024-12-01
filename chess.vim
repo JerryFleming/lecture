@@ -6,7 +6,6 @@ import socket
 import time
 import textwrap
 import vim
-from collections import defaultdict
 from threading import Thread, Timer
 
 socket.setdefaulttimeout(.2)
@@ -55,10 +54,18 @@ class Conn:
 class Status:
   waiting = False # waiting for computer/friend
   frozen = False # game over etc
-  message = False # a msg is displayed (no clear until timeout)
+  message = False # a msg is displayed (no clear until cursor movement)
+# NB: not using defaultdict because with all the defaults
+# future iteration becomes more and more slower
+class Pos(dict):
+  def __getitem__(self, item):
+    try:
+      return super.__getitem__(item)
+    except KeyError:
+      return Color.empty
 # position of pieces, index by (v,h) lane number on board
 # (not physical line/column)
-POS = defaultdict(int)
+POS = Pos()
 
 ################### AI algorhythm [[[ ##########################################
 # Below is for alpha-beta pruning
@@ -380,7 +387,7 @@ def start_client(addr):
   auto_move()
 
 def save_session(fname, bang):
-  new = {str(k):Color.map[v] for k, v in POS.items() if v}
+  new = {str(k):Color.map[v] for k, v in POS.items()}
   if os.path.exists(fname) and not bang:
     print(f'File already exists. Use `Save! {fname}` to overwrite.')
     return
@@ -520,7 +527,6 @@ def auto_move():
     return True
   if not pos:
     pos = find_move(Color.black)
-  del POS[pos] # to reserve insertion order in defaultdict
   POS[pos] = Color.white
   vim.eval('clearmatches()')
   vim.eval('matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
@@ -545,7 +551,6 @@ def put_piece():
   if POS[pos]:
     print('This position is occupied.')
     return
-  del POS[pos] # to reserve insertion order in defaultdict
   POS[pos] = Color.black
   if Conn.name:
     Conn.put = str([*pos, Board.vpos, Board.hpos])
