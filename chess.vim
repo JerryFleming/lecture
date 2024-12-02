@@ -1,3 +1,4 @@
+if !has('python3')|echoerr 'Vim is not compiled with python3.'|finish|endif
 py3 << EOL
 import os.path
 import math
@@ -6,6 +7,7 @@ import socket
 import time
 import textwrap
 import vim
+from collections import UserDict
 from threading import Thread, Timer
 
 socket.setdefaulttimeout(.2)
@@ -57,10 +59,10 @@ class Status:
   message = False # a msg is displayed (no clear until cursor movement)
 # NB: not using defaultdict because with all the defaults
 # future iteration becomes more and more slower
-class Pos(dict):
+class Pos(UserDict):
   def __getitem__(self, item):
     try:
-      return super.__getitem__(item)
+      return super().__getitem__(item)
     except KeyError:
       return Color.empty
 # position of pieces, index by (v,h) lane number on board
@@ -75,19 +77,20 @@ POS = Pos()
 WILLWIN = 100000000
 
 class Pattern:
-  W = (
+  def dup(*lst): return list(lst) + [[-y for y in x]for x in lst]
+  W0 = dup(
     [ 1, 1, 1, 1, 1],
   )
-  U4 = (
+  U4 = dup(
     [ 0, 1, 1, 1, 1, 0],
   )
-  U3 = (
+  U3 = dup(
     [ 0, 1, 1, 1, 0, 0],
     [ 0, 0, 1, 1, 1, 0],
     [ 0, 1, 0, 1, 1, 0],
     [ 0, 1, 1, 0, 1, 0],
   )
-  U2 = (
+  U2 = dup(
     [ 0, 0, 1, 1, 0, 0],
     [ 0, 1, 0, 1, 0, 0],
     [ 0, 0, 1, 0, 1, 0],
@@ -95,7 +98,7 @@ class Pattern:
     [ 0, 0, 0, 1, 1, 0],
     [ 0, 1, 0, 0, 1, 0],
   )
-  C4 = (
+  C4 = dup(
     [-1, 1, 0, 1, 1, 1],
     [-1, 1, 1, 0, 1, 1],
     [-1, 1, 1, 1, 0, 1],
@@ -105,7 +108,7 @@ class Pattern:
     [ 1, 1, 0, 1, 1,-1],
     [ 1, 1, 1, 0, 1,-1],
   )
-  C3 = (
+  C3 = dup(
     [-1, 1, 1, 1, 0, 0],
     [-1, 1, 1, 0, 1, 0],
     [-1, 1, 0, 1, 1, 0],
@@ -117,10 +120,10 @@ class Pattern:
     [-1, 1, 1, 0, 0, 1,-1],
     [-1, 1, 0, 0, 1, 1,-1],
   )
-  w = u4 = u3 = u2 = c4 = c3 = 0
+  w0 = u4 = u3 = u2 = c4 = c3 = 0
 
 def score_ptn(ptn):
-  if ptn.w: return WILLWIN * 10
+  if ptn.w0: return WILLWIN * 10
   elif ptn.u4: return WILLWIN
   elif ptn.c4 > 1: return WILLWIN / 10
   elif ptn.u3 > 0 and ptn.c4: return WILLWIN / 100
@@ -152,16 +155,14 @@ def score_ptn(ptn):
 
 def contains(ptns, combo):
   for ptn in ptns:
-    neg = [-x for x in ptn]
     for idx in range(len(combo) - len(ptn) + 1):
       if ptn == combo[idx:idx+len(ptn)]: return True
-      if neg == combo[idx:idx+len(ptn)]: return True
   return False
 
 def get_value(*combos):
   ptn = Pattern()
   for combo in combos:
-    if   contains(ptn.W,  combo): ptn.w  += 1
+    if   contains(ptn.W0, combo): ptn.w0 += 1
     elif contains(ptn.C4, combo): ptn.c4 += 1
     elif contains(ptn.C3, combo): ptn.c3 += 1
     elif contains(ptn.U4, combo): ptn.u4 += 1
@@ -410,13 +411,13 @@ def restore_session(fname, bang):
       vim.eval('matchaddpos("WarningMsg", [%s])' % physical_pos(*pos, True))
       print('Press any char to continue...')
       vim.command('redraw')
-      char = vim.eval('getcharstr()')
+      char = vim.eval('nr2char(getchar())')
   draw_board()
   print(f'Reloaded saved session from {fname}.')
 
 def clear_session():
   message('Are you sure to clear the session? y/N', False)
-  char = vim.eval('getcharstr()')
+  char = vim.eval('nr2char(getchar())')
   vim.command('redraw')
   if char.lower() != 'y':
     return
@@ -444,7 +445,7 @@ def check_win(pos, side):
     msg += '\nDo you want to play again? y/N'
     message(msg, False)
     vim.command('redraw')
-    char = vim.eval('getcharstr()')
+    char = vim.eval('nr2char(getchar())')
     if char.lower() == 'y':
       POS.clear()
       draw_board()
@@ -633,7 +634,7 @@ def play():
   else:
     POS.clear()
     message(msg, model=True)
-  char = vim.eval('getcharstr()')
+  char = vim.eval('nr2char(getchar())')
   draw_board() # do this so we have vrepeat/hrepeat
   vim.command('redraw')
   if char.lower() != 'y':
