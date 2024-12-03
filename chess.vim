@@ -1,4 +1,9 @@
-if !has('python3')|echoerr 'Vim is not compiled with python3.'|finish|endif
+" Run this in shell to be aware of screen size change.
+" shopt -s checkwinsize
+if !has('python3')
+  echoerr 'Vim is not compiled with python3.'
+  finish
+endif
 py3 << EOL
 import os.path
 import math
@@ -699,17 +704,17 @@ function! Setup()
   command! -nargs=1 Server py3 start_server(<f-args>)
   command! -nargs=1 Client py3 start_client(<f-args>)
   command! -complete=file -bang -nargs=1 Save
-    \ py3 save_session(<f-args>, "<bang>")
+    \ py3 save_session(<f-args>, '<bang>')
   command! -complete=file -bang -nargs=1 Restore
-    \ py3 restore_session(<f-args>, "<bang>")
+    \ py3 restore_session(<f-args>, '<bang>')
   "<c-u>: this clears out the line range for a command with a number.
   "norm! The ! after :norm ensures we don't use remapped commands.
   "nnoremap <silent> j :<c-u>norm! 2j<cr>
-  nnoremap <silent> j :py3 move_cursor("j")<cr>
-  nnoremap <silent> k :py3 move_cursor("k")<cr>
-  nnoremap <silent> h :py3 move_cursor("h")<cr>
-  nnoremap <silent> l :py3 move_cursor("l")<cr>
-  nnoremap <LeftMouse> :py3 move_cursor("m")<cr>
+  nnoremap <silent> j :py3 move_cursor('j')<cr>
+  nnoremap <silent> k :py3 move_cursor('k')<cr>
+  nnoremap <silent> h :py3 move_cursor('h')<cr>
+  nnoremap <silent> l :py3 move_cursor('l')<cr>
+  nnoremap <LeftMouse> :py3 move_cursor('m')<cr>
   nnoremap <silent> x :py3 put_piece()<cr>
   nnoremap <silent> c :py3 clear_session()<cr>
   autocmd VimResized * py3 draw_board(True)
@@ -723,4 +728,3 @@ endfunction
 
 call Setup()
 Play
-" shopt -s checkwinsize
