@@ -13,7 +13,7 @@ import time
 import textwrap
 import vim
 from collections import UserDict
-from threading import Thread, Timer
+from threading import Thread
 
 socket.setdefaulttimeout(.2)
 

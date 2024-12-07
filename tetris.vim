@@ -6,6 +6,7 @@ py3 << EOL
 import random
 import time
 import vim
+from threading import Thread, active_count
 
 SHAPE = {
   'T': [[0,1,0], [1,1,1]],
@@ -16,7 +17,6 @@ SHAPE = {
   'O': [[1,1], [1,1]],
   'I': [[1,1,1,1]],
 }
-
 ROTATION = {
   'T': [[2,2], [2,1], [1,2], [2,2]],
   'L': [[2,2], [2,1], [1,2], [2,2]],
@@ -26,7 +26,6 @@ ROTATION = {
   'O': [[1,1]],
   'I': [[1,2], [2,1]],
 }
-
 class Piece:
   data = []
   shape = ''
@@ -80,7 +79,6 @@ def detect_ground():
       return False
     line = Board.ground[idx]
     row = Piece.data[v]
-    print(row, Piece.left, idx)
     hit = [line[Piece.left+k]==v==1 for k,v in enumerate(row)]
     if any(hit):
       return change_ground()
@@ -148,27 +146,33 @@ def draw_board():
       if v-Piece.top in range(Piece.height):
         line[Piece.left:Piece.left+Piece.width] = ['0' if x else ' ' for x in Piece.data[v-Piece.top]]
     idx = v - Board.height + len(Board.ground)
-    if idx == 0:
+    if idx >= 0:
       for k,v in enumerate(Board.ground[idx]):
         if not v: continue
         line[k] = 'x'
     line.append('|')
     lines.append(''.join(line))
+  lines.append('-' * Board.width + '+')
   update_buffer(lines)
 
 def play():
-  Board.width = 30 #vim.current.window.width
-  Board.height = vim.current.window.height
+  Board.width = 20 #vim.current.window.width
+  Board.height = 20 #vim.current.window.height
   Board.ground = [[0] * Board.width]
   new_piece()
-  return
+  if active_count() == 1:
+    Thread(target=loop, args=[]).start()
+
+def loop():
   while True:
     if Status.quit: break
     move('d')
-    time.sleep(0.2)
+    time.sleep(0.3)
 
-def quit():
-  Status.quit = True
+def quit(force=False):
+  Status.quit = not Status.quit
+  if not force and active_count() == 1:
+    Thread(target=loop, args=[]).start()
 EOL
 
 function! Setup()
@@ -178,8 +182,10 @@ function! Setup()
   nnoremap <silent> h :py3 move('l')<cr>
   nnoremap <silent> l :py3 move('r')<cr>
   nnoremap <silent> j :py3 move('d')<cr>
+  nnoremap <silent> <Space> :py3 move('d')<cr>
   nnoremap <silent> k :py3 move('u')<cr>
   nnoremap <silent> q :py3 quit()<cr>
+  autocmd QuitPre * py3 quit(True)
 
   set nonumber
   set ch=10
