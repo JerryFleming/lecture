@@ -724,6 +724,7 @@ function! Setup()
   set nofoldenable
   set nomodifiable
   set mouse=a
+  message clear
 endfunction
 
 call Setup()
