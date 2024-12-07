@@ -131,9 +131,10 @@ def rotate(clockwise=True):
   Piece.width, Piece.height = width, height
   draw_board()
 
-def update_buffer(lines):
+def update_buffer(lines, width):
   vim.command('set modifiable')
-  vim.current.buffer[:] = lines
+  for idx, line in enumerate(lines):
+    vim.current.buffer[idx] = line + vim.current.buffer[idx][width:]
   vim.command('set nomodifiable')
   vim.command('redraw')
   vim.command('set nomodified')
@@ -153,12 +154,16 @@ def draw_board():
     line.append('|')
     lines.append(''.join(line))
   lines.append('-' * Board.width + '+')
-  update_buffer(lines)
+  update_buffer(lines, Board.width + 1)
 
 def play():
-  Board.width = 20 #vim.current.window.width
-  Board.height = 20 #vim.current.window.height
+  Board.width = min(20, vim.current.window.width)
+  Board.height = min(20, vim.current.window.height)
   Board.ground = [[0] * Board.width]
+  vim.command('set modifiable')
+  while len(vim.current.buffer) < Board.height + 1:
+    vim.current.buffer.append('')
+  vim.command('set nomodifiable')
   new_piece()
   if active_count() == 1:
     Thread(target=loop, args=[]).start()
@@ -176,6 +181,9 @@ def quit(force=False):
 EOL
 
 function! Setup()
+  set ft=text
+  1
+  redraw
   nnoremap <silent> z :py3 rotate(False)<cr>
   nnoremap <silent> / :py3 rotate(True)<cr>
   nnoremap <silent> g :py3 new_piece()<cr>
