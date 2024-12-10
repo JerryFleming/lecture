@@ -6,7 +6,7 @@ py3 << EOL
 import random
 import time
 import vim
-from threading import Thread, active_count
+from threading import Timer
 
 SHAPE = {
   'T': [[0,1,0], [1,1,1]],
@@ -165,25 +165,24 @@ def play():
     vim.current.buffer.append('')
   vim.command('set nomodifiable')
   new_piece()
-  if active_count() == 1:
-    Thread(target=loop, args=[]).start()
+  Timer(0.3, loop).start()
 
 def loop():
   while True:
-    if Status.quit: break
-    move('d')
+    if Status.quit is False:
+      move('d')
+    elif Status.quit is None:
+      break
     time.sleep(0.3)
 
 def quit(force=False):
-  Status.quit = not Status.quit
-  if not force and active_count() == 1:
-    Thread(target=loop, args=[]).start()
+  if force:
+    Status.quit = None
+  else:
+    Status.quit = not Status.quit
 EOL
 
 function! Setup()
-  set ft=text
-  1
-  redraw
   nnoremap <silent> z :py3 rotate(False)<cr>
   nnoremap <silent> / :py3 rotate(True)<cr>
   nnoremap <silent> g :py3 new_piece()<cr>
@@ -196,7 +195,9 @@ function! Setup()
   autocmd QuitPre * py3 quit(True)
 
   set nonumber
-  set ch=10
+  set ft=text
+  1
+  redraw
   set nofoldenable
   set nomodifiable
   message clear
