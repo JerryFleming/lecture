@@ -63,7 +63,8 @@ class Status:
   frozen = False # game over etc
   message = False # a msg is displayed (no clear until cursor movement)
 # NB: not using defaultdict because with all the defaults
-# future iteration becomes more and more slower
+# future iteration becomes slower and slower
+# for UserDict (over Dict) only getitem() is needed
 class Pos(UserDict):
   def __getitem__(self, item):
     try:
