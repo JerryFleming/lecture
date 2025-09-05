@@ -1,3 +1,7 @@
+body {
+  max-width: 800px;
+  margin: auto;
+}
 div.wrap
 {
   margin-left: 5px;

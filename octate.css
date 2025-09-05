@@ -1,3 +1,7 @@
+body {
+  max-width: 800px;
+  margin: auto;
+}
 .sep {
   border-top: 1px dotted black;
   position: relative;
