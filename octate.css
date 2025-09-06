@@ -100,6 +100,7 @@ td.origin {
   display: inline-block;
   border: 1px dotted transparent;
   position: relative;
+  cursor: pointer;
 }
 .mark.on {
   border: 1px dotted black;
